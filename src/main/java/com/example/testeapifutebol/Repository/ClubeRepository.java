@@ -22,27 +22,28 @@ import org.springframework.stereotype.Repository;
 public interface ClubeRepository extends JpaRepository<ClubeEntity, Long> {
 
     /**
-     * MÉTODO ÚNICO COM @Query - SUBSTITUI TODOS OS MÉTODOS ANTERIORES!
-     * 
-     * Por que usar @Query?
-     * - Uma única consulta SQL ao invés de vários métodos
-     * - Mais controle sobre a consulta
-     * - Filtros opcionais com condições dinâmicas
-     * - Código mais limpo e organizado
-     * 
+     * MÉTODO ÚNICO COM @Query
      * Como funciona:
      * - (:nome IS NULL OR ...) = se nome for null, ignora o filtro
      * - UPPER(c.nome) LIKE UPPER(CONCAT('%', :nome, '%')) = busca case insensitive
+     * - (:datacriacao IS NULL OR c.datacriacao = :datacriacao) = filtro por data específica
      * - Pageable funciona automaticamente para paginação e ordenação
      */
-    @Query("SELECT c FROM ClubeEntity c WHERE " +
+    @Query(value = "SELECT c FROM ClubeEntity c WHERE " +
            "(:nome IS NULL OR UPPER(c.nome) LIKE UPPER(CONCAT('%', :nome, '%'))) AND " +
            "(:estado IS NULL OR c.estado = :estado) AND " +
-           "(:ativo IS NULL OR c.ativo = :ativo)")
+           "(:ativo IS NULL OR c.ativo = :ativo) AND " +
+           "(:datacriacao IS NULL OR c.datacriacao = :datacriacao)",
+           countQuery = "SELECT COUNT(c) FROM ClubeEntity c WHERE " +
+           "(:nome IS NULL OR UPPER(c.nome) LIKE UPPER(CONCAT('%', :nome, '%'))) AND " +
+           "(:estado IS NULL OR c.estado = :estado) AND " +
+           "(:ativo IS NULL OR c.ativo = :ativo) AND " +
+           "(:datacriacao IS NULL OR c.datacriacao = :datacriacao)")
     Page<ClubeEntity> findClubesComFiltros(
         @Param("nome") String nome,
         @Param("estado") String estado, 
         @Param("ativo") String ativo,
+        @Param("datacriacao") java.time.LocalDate datacriacao,
         Pageable pageable
     );
 

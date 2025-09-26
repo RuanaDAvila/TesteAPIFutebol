@@ -25,12 +25,6 @@ import org.springframework.data.domain.Sort;
 //3. Pede pro Repository buscar no depósito
 //4. Pega o resultado e converte de volta (DTO)
 //5. Entrega o resultado final
-    //Um exemplo Cliente: "Quero buscar clubes do RJ"
-//Service pensa:
-//1. "Vou pedir pro Repository: findByEstado('RJ')"
-//2. "Repository me deu uma lista de Entities"
-//3. "Vou converter cada Entity para DTO"
-//4. "Pronto! Aqui está sua lista formatada para envio"
 
 @Service
 public class ClubeService {
@@ -51,16 +45,16 @@ public class ClubeService {
         // Converte DTO → Entity
         ClubeEntity clubeParaSalvar = new ClubeEntity();
         
-        // 2. Copia dados do DTO para a Entity (todos os campos obrigatórios)
+        //Copia dados do DTO para a Entity (todos os campos obrigatórios)
         clubeParaSalvar.setNome(clubeDTO.getNome());                                    // String → String
         clubeParaSalvar.setEstado(clubeDTO.getEstado());                                // String → String  
         clubeParaSalvar.setDatacriacao(LocalDate.parse(clubeDTO.getDatacriacao()));    // String → LocalDate
         clubeParaSalvar.setAtivo(clubeDTO.getAtivo());                                  // String → String
 
-        // 3. Salva no banco de dados (Repository faz a persistência)
+        //Salva no banco de dados (Repository faz a persistência)
         ClubeEntity clubeSalvo = clubeRepository.save(clubeParaSalvar);
 
-        // 4. Converte a Entity salva de volta para DTO (para retornar ao Controller)
+        //Converte a Entity salva de volta para DTO (para retornar ao Controller)
         ClubeDTO DTOResposta = new ClubeDTO();
         DTOResposta.setNome(clubeSalvo.getNome());                          // String → String
         DTOResposta.setEstado(clubeSalvo.getEstado());                      // String → String
@@ -75,10 +69,10 @@ public class ClubeService {
      * Retorna: List<ClubeDTO> (lista de clubes para o Controller)
      */
     public List<ClubeDTO> findAllClubeEntity() {
-        // 1. Busca todas as Entities no banco
+        //Busca todas as Entities no banco
         List<ClubeEntity> clubes = clubeRepository.findAll();
         
-        // 2. Converte cada Entity para DTO usando Stream (programação funcional)
+        //Converte cada Entity para DTO usando Stream (programação funcional)
         return clubes.stream().map(clube -> {
             ClubeDTO dto = new ClubeDTO();
             dto.setNome(clube.getNome());                          // String → String
@@ -121,8 +115,7 @@ public class ClubeService {
      * Muda status de "S" para "N" sem deletar do banco
      */
     public boolean inativarClubeEntity(Long id) {
-        // PASSO 1: PROCURAR O CLUBE NO BANCO DE DADOS
-        // É como procurar uma pessoa na agenda pelo número do telefone
+        //PROCURAR O CLUBE NO BANCO DE DADOS
         // findById(id) = "procure o clube com esse ID"
         // orElse(null) = "se não encontrar, retorne null (vazio)"
         ClubeEntity clubeExistente = clubeRepository.findById(id).orElse(null);
@@ -137,7 +130,7 @@ public class ClubeService {
         // Ao invés de apagar, só mudo o status de "S" (ativo) para "N" (inativo)
         clubeExistente.setAtivo("N");
 
-        // PASSO 3: SALVAR A ALTERAÇÃO NO BANCO DE DADOS
+        //SALVAR A ALTERAÇÃO NO BANCO DE DADOS
         // É como apertar "Ctrl+S" para salvar um documento
         // O Spring pega o objeto modificado e atualiza no MySQL
         clubeRepository.save(clubeExistente);
@@ -210,11 +203,11 @@ public class ClubeService {
      * 
      * Retorna: Page<ClubeDTO> (página com lista de clubes + informações de paginação)
      */
-    public Page<ClubeDTO> findClubesComFiltros(String nome, String estado, String ativo, Pageable pageable) {
+    public Page<ClubeDTO> findClubesComFiltros(String nome, String estado, String ativo, java.time.LocalDate datacriacao, Pageable pageable) {
         // BUSCAR NO BANCO COM FILTROS - AGORA MUITO MAIS SIMPLES!
         // Uma única chamada substitui toda aquela lógica complexa de if/else
         // O @Query do Repository faz toda a mágica dos filtros opcionais
-        Page<ClubeEntity> clubesEncontrados = clubeRepository.findClubesComFiltros(nome, estado, ativo, pageable);
+        Page<ClubeEntity> clubesEncontrados = clubeRepository.findClubesComFiltros(nome, estado, ativo, datacriacao, pageable);
 
         
         // CONVERTER ENTITIES PARA DTOs

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.List;
 
@@ -50,6 +51,7 @@ public class ClubeControler {
      * - GET /clubes/buscar?nome=Flamengo          → Clubes com "Flamengo" no nome
      * - GET /clubes/buscar?estado=RJ              → Clubes do Rio de Janeiro
      * - GET /clubes/buscar?ativo=S                → Apenas clubes ativos
+     * - GET /clubes/buscar?datacriacao=2024-01-15 → Clubes criados em 15/01/2024
      * - GET /clubes/buscar?nome=Fla&estado=RJ     → Clubes com "Fla" no nome E do RJ
      * 
      * PAGINAÇÃO:
@@ -66,8 +68,8 @@ public class ClubeControler {
      * - sortDir: direção (asc ou desc)
      * 
      * COMBINAÇÕES:
-     * - GET /clubes/buscar?estado=RJ&ativo=S&sort=nome,asc&page=0&size=5
-     *   → Clubes ativos do RJ, ordenados por nome A-Z, primeira página com 5 resultados
+     * - GET /clubes/buscar?estado=RJ&ativo=S&datacriacao=2024-01-15&sort=nome,asc&page=0&size=5
+     *   → Clubes ativos do RJ criados em 15/01/2024, ordenados por nome A-Z, primeira página com 5 resultados
      *
      * RETORNOS:
      * - 200 OK + lista de clubes (mesmo que vazia)
@@ -80,6 +82,7 @@ public class ClubeControler {
             @RequestParam(required = false) String nome,     // ?nome=Flamengo
             @RequestParam(required = false) String estado,   // ?estado=RJ
             @RequestParam(required = false) String ativo,    // ?ativo=S
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate datacriacao, // ?datacriacao=2024-01-15
 
             // PARÂMETROS DE PAGINAÇÃO E ORDENAÇÃO
             // @RequestParam(defaultValue = "0") = se não informar, usa valor padrão
@@ -99,7 +102,7 @@ public class ClubeControler {
         
         // Busca clubes aplicando filtros, paginação e ordenação
         // Passa todos os filtros e configurações para o Service fazer a busca
-        Page<ClubeDTO> clubesEncontrados = clubeService.findClubesComFiltros(nome, estado, ativo, pageable);
+        Page<ClubeDTO> clubesEncontrados = clubeService.findClubesComFiltros(nome, estado, ativo, datacriacao, pageable);
         
         return new ResponseEntity<>(clubesEncontrados, HttpStatus.OK); // 200
     }
