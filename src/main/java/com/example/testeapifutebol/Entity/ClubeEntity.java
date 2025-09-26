@@ -31,7 +31,7 @@ import java.time.LocalDate;
     @Column(nullable = false)
     private LocalDate datacriacao;
 
-    // Status se o clube está ativo (obrigatório, S ou N)
+    // para verificar o Status, se o clube está ativo (obrigatório, S ou N)
     @Column(nullable = false, length = 1)
     private String ativo;
 
