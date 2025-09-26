@@ -15,9 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 /**
- * Service - Camada de lógica de negócio
- * Responsável por processar dados entre Controller e Repository
- * Converte DTO ↔ Entity e aplica regras de negócio
+ * Service - Lógica de negócio para operações de Clube
+ * Converte DTO ↔ Entity e coordena com Repository
  */
 
     // Quando alguém pede algo, o Service:
@@ -38,7 +37,7 @@ public class ClubeService {
     // Injeta o Repository para acessar o banco de dados
     private final ClubeRepository clubeRepository;
 
-    // Construtor - Spring injeta automaticamente o Repository
+    // Construtor para injeção de dependência
     public ClubeService(ClubeRepository clubeRepository) {
         this.clubeRepository = clubeRepository;
     }
@@ -49,7 +48,7 @@ public class ClubeService {
      * Retorna: ClubeDTO (dados salvos com ID gerado)
      */
     public ClubeDTO saveClubeEntity(ClubeDTO clubeDTO) {
-        // 1. Cria uma nova Entity vazia
+        // Converte DTO → Entity
         ClubeEntity clubeParaSalvar = new ClubeEntity();
         
         // 2. Copia dados do DTO para a Entity (todos os campos obrigatórios)
@@ -96,17 +95,16 @@ public class ClubeService {
      * Retorna: ClubeDTO atualizado ou null se não encontrar
      */
     public ClubeDTO updateClubeEntity(Long id, ClubeDTO clubeDTO) {
-        // 1. Busca o clube existente
+        //  Busca o clube existente
         ClubeEntity clubeExistente = clubeRepository.findById(id).orElse(null);
-        if (clubeExistente == null) return null; // Não encontrou
+        if (clubeExistente == null) return null;
 
-        // 2. Atualiza os dados
+        // Atualiza os dados
         clubeExistente.setNome(clubeDTO.getNome());
         clubeExistente.setEstado(clubeDTO.getEstado());
         clubeExistente.setDatacriacao(LocalDate.parse(clubeDTO.getDatacriacao()));
         clubeExistente.setAtivo(clubeDTO.getAtivo());
-
-        // 3. Salva e retorna
+        //salva e retorna
         ClubeEntity clubeAtualizado = clubeRepository.save(clubeExistente);
 
         ClubeDTO resposta = new ClubeDTO();
@@ -119,19 +117,8 @@ public class ClubeService {
     }
 
     /**
-     * MÉTODO PARA INATIVAR UM CLUBE (SOFT DELETE)
-     * O que é SOFT DELETE?
-     * - É como "esconder" um item ao invés de apagar completamente
-     * - Imagine uma lixeira do computador: o arquivo não é deletado, só fica "inativo"
-     * - No nosso caso: mudamos o campo "ativo" de "S" para "N"
-     * 
-     * Por que devo usar SOFT DELETE?
-     * - Mantém histórico dos dados
-     * - Permite "reativar" o clube depois se necessário
-     * - Evita perder informações importantes
-     * 
-     * Recebe: ID do clube (exemplo: 1, 2, 3...)
-     * Retorna: true (conseguiu inativar) ou false (clube não existe)
+     * Inativa um clube (soft delete)
+     * Muda status de "S" para "N" sem deletar do banco
      */
     public boolean inativarClubeEntity(Long id) {
         // PASSO 1: PROCURAR O CLUBE NO BANCO DE DADOS
@@ -146,10 +133,8 @@ public class ClubeService {
             return false; // Retorna "false" = "não consegui inativar porque não existe"
         }
 
-        // PASSO 2: MARCAR COMO INATIVO (SOFT DELETE)
-        // Aqui é onde acontece a "mágica" do SOFT DELETE
-        // Ao invés de apagar, só mudamos o status de "S" (ativo) para "N" (inativo)
-        // É como marcar uma tarefa como "concluída" sem apagar ela da lista
+        //MARCAR COMO INATIVO (SOFT DELETE)
+        // Ao invés de apagar, só mudo o status de "S" (ativo) para "N" (inativo)
         clubeExistente.setAtivo("N");
 
         // PASSO 3: SALVAR A ALTERAÇÃO NO BANCO DE DADOS
@@ -174,7 +159,7 @@ public class ClubeService {
      * Retorna: ClubeDTO (dados do clube) ou null (se não encontrar)
      */
     public ClubeDTO findClubeById(Long id) {
-        // PASSO 1: PROCURAR O CLUBE NO BANCO DE DADOS
+        // PROCURAR O CLUBE NO BANCO DE DADOS
         // É como procurar um contato específico na agenda pelo número
         // findById(id) = "procure exatamente o clube com esse ID"
         // orElse(null) = "se não encontrar, retorne null (vazio)"
@@ -187,7 +172,7 @@ public class ClubeService {
             return null; // Retorna null = "não encontrei esse clube"
         }
 
-        // PASSO 2: CONVERTER ENTITY PARA DTO
+        //CONVERTER ENTITY PARA DTO
         // Encontrou o clube! Agora precisa "traduzir" os dados
         // Entity = formato do banco de dados
         // DTO = formato para enviar ao Postman/front-end
@@ -197,7 +182,7 @@ public class ClubeService {
         clubeParaRetornar.setDatacriacao(clubeEncontrado.getDatacriacao().toString()); // LocalDate → String
         clubeParaRetornar.setAtivo(clubeEncontrado.getAtivo());                        // String → String
 
-        // PASSO 3: RETORNAR O CLUBE ENCONTRADO
+        //RETORNAR O CLUBE ENCONTRADO
         return clubeParaRetornar; // Retorna o DTO com os dados do clube específico
     }
 
@@ -226,64 +211,23 @@ public class ClubeService {
      * Retorna: Page<ClubeDTO> (página com lista de clubes + informações de paginação)
      */
     public Page<ClubeDTO> findClubesComFiltros(String nome, String estado, String ativo, Pageable pageable) {
-        // PASSO 1: BUSCAR NO BANCO COM FILTROS
-        // Aqui vamos usar um método especial do Repository que aceita filtros
-        // É como fazer uma consulta SQL com WHERE, ORDER BY e LIMIT
-        Page<ClubeEntity> clubesEncontrados;
-        
-        // LÓGICA DE FILTROS: Aplicamos os filtros que foram informados
-        if (nome != null && estado != null && ativo != null) {
-            // TODOS OS 3 FILTROS: nome + estado + ativo
-            // É como SQL: WHERE nome LIKE '%texto%' AND estado = 'RJ' AND ativo = 'S'
-            clubesEncontrados = clubeRepository.findByNomeContainingIgnoreCaseAndEstadoAndAtivo(nome, estado, ativo, pageable);
-        } else if (nome != null && estado != null) {
-            // 2 FILTROS: nome + estado
-            // É como SQL: WHERE nome LIKE '%texto%' AND estado = 'RJ'
-            clubesEncontrados = clubeRepository.findByNomeContainingIgnoreCaseAndEstado(nome, estado, pageable);
-        } else if (nome != null && ativo != null) {
-            // 2 FILTROS: nome + ativo
-            // É como SQL: WHERE nome LIKE '%texto%' AND ativo = 'S'
-            clubesEncontrados = clubeRepository.findByNomeContainingIgnoreCaseAndAtivo(nome, ativo, pageable);
-        } else if (estado != null && ativo != null) {
-            // 2 FILTROS: estado + ativo
-            // É como SQL: WHERE estado = 'RJ' AND ativo = 'S'
-            clubesEncontrados = clubeRepository.findByEstadoAndAtivo(estado, ativo, pageable);
-        } else if (nome != null) {
-            // 1 FILTRO: apenas nome
-            // É como SQL: WHERE nome LIKE '%texto%'
-            clubesEncontrados = clubeRepository.findByNomeContainingIgnoreCase(nome, pageable);
-        } else if (estado != null) {
-            // 1 FILTRO: apenas estado
-            // É como SQL: WHERE estado = 'RJ'
-            clubesEncontrados = clubeRepository.findByEstado(estado, pageable);
-        } else if (ativo != null) {
-            // 1 FILTRO: apenas ativo
-            // É como SQL: WHERE ativo = 'S'
-            clubesEncontrados = clubeRepository.findByAtivo(ativo, pageable);
-        } else {
-            // SEM FILTROS: busca todos (igual ao método original, mas com paginação)
-            // É como SQL: SELECT * FROM clube_entity ORDER BY ... LIMIT ...
-            clubesEncontrados = clubeRepository.findAll(pageable);
-        }
+        // BUSCAR NO BANCO COM FILTROS - AGORA MUITO MAIS SIMPLES!
+        // Uma única chamada substitui toda aquela lógica complexa de if/else
+        // O @Query do Repository faz toda a mágica dos filtros opcionais
+        Page<ClubeEntity> clubesEncontrados = clubeRepository.findClubesComFiltros(nome, estado, ativo, pageable);
 
-        // PASSO 2: CONVERTER ENTITIES PARA DTOs
-        // Pegamos cada clube encontrado e convertemos para o formato de resposta
-        // É como "traduzir" os dados do banco para o formato que o Postman entende
+        
+        // CONVERTER ENTITIES PARA DTOs
+        // Converte os resultados para o formato de resposta
         Page<ClubeDTO> clubesParaRetornar = clubesEncontrados.map(clube -> {
             ClubeDTO dto = new ClubeDTO();
-            dto.setNome(clube.getNome());                          // String → String
-            dto.setEstado(clube.getEstado());                      // String → String
-            dto.setDatacriacao(clube.getDatacriacao().toString()); // LocalDate → String
-            dto.setAtivo(clube.getAtivo());                        // String → String
+            dto.setNome(clube.getNome());
+            dto.setEstado(clube.getEstado());
+            dto.setDatacriacao(clube.getDatacriacao().toString());
+            dto.setAtivo(clube.getAtivo());
             return dto;
         });
 
-        // PASSO 3: RETORNAR PÁGINA COM CLUBES
-        // Retorna não só a lista de clubes, mas também informações de paginação:
-        // - Lista dos clubes da página atual
-        // - Número total de clubes encontrados
-        // - Número total de páginas
-        // - Página atual, tamanho da página, etc.
         return clubesParaRetornar;
     }
 
