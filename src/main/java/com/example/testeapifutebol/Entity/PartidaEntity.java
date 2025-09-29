@@ -46,7 +46,7 @@ public class PartidaEntity {
     public PartidaEntity() {
     }
 
-    // Construtor com todos os campos
+    // Construtor com todos os campos (eu poderia ter feito cada um por vez)
     public PartidaEntity(Long clubeCasaId, Long clubeVisitanteId, Integer resultadoCasa, 
                         Integer resultadoVisitante, String estadio, LocalDateTime dataHora) {
         this.clubeCasaId = clubeCasaId;

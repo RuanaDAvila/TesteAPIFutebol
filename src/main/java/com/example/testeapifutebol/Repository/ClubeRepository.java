@@ -30,10 +30,18 @@ public interface ClubeRepository extends JpaRepository<ClubeEntity, Long> {
      * - Pageable funciona automaticamente para paginação e ordenação
      */
     @Query(value = "SELECT c FROM ClubeEntity c WHERE " +
+           // FILTRO NOME: Se null ignora, se não busca parcial (ex: "fla" encontra "Flamengo")
+           // UPPER() = converte para maiúscula tanto o nome do banco quanto o parâmetro (busca case-insensitive)
+           // CONCAT('%', :nome, '%') = adiciona % antes e depois (ex: "fla" vira "%fla%")
+           // LIKE = busca parcial (ex: "%FLA%" encontra "FLAMENGO", "FLUMINENSE")
            "(:nome IS NULL OR UPPER(c.nome) LIKE UPPER(CONCAT('%', :nome, '%'))) AND " +
+           // FILTRO ESTADO: Se null ignora, se não busca exato (ex: "RJ")
            "(:estado IS NULL OR c.estado = :estado) AND " +
+           // FILTRO ATIVO: Se null ignora, se não busca exato (true/false)
            "(:ativo IS NULL OR c.ativo = :ativo) AND " +
+           // FILTRO DATA: Se null ignora, se não busca data exata (ex: "2024-01-01")
            "(:datacriacao IS NULL OR c.datacriacao = :datacriacao)",
+           // COUNT QUERY: Conta total de registros para paginação funcionar
            countQuery = "SELECT COUNT(c) FROM ClubeEntity c WHERE " +
            "(:nome IS NULL OR UPPER(c.nome) LIKE UPPER(CONCAT('%', :nome, '%'))) AND " +
            "(:estado IS NULL OR c.estado = :estado) AND " +
