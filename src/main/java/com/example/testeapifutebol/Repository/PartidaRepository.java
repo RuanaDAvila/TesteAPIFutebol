@@ -1,6 +1,8 @@
 package com.example.testeapifutebol.Repository;
 
 import com.example.testeapifutebol.Entity.PartidaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,13 +19,7 @@ import java.util.List;
 @Repository
 public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
     
-    // MÉTODOS BÁSICOS HERDADOS DO JpaRepository (GRÁTIS!):
-    // - save(PartidaEntity) - salvar partida
-    // - findAll() - buscar todas as partidas
-    // - findById(Long) - buscar partida por ID
-    // - deleteById(Long) - deletar partida por ID
-    // - count() - contar partidas
-    // - existsById(Long) - verificar se partida existe
+
     
 
     // Buscar partidas por clube, por estádio, por data, etc.
@@ -50,5 +46,32 @@ public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
     @Query("SELECT p FROM PartidaEntity p WHERE p.dataHora BETWEEN :dataInicio AND :dataFim")
     List<PartidaEntity> buscarPartidasEntreDatas(@Param("dataInicio") LocalDateTime dataInicio,
                                                  @Param("dataFim") LocalDateTime dataFim);
+
+    // Buscar partidas com filtros avançados, paginação e ordenação
+    @Query(value = "SELECT p FROM PartidaEntity p WHERE " +
+           "(:estadio IS NULL OR UPPER(p.estadio) LIKE UPPER(CONCAT('%', :estadio, '%'))) AND " +
+           "(:golsCasa IS NULL OR p.resultadoCasa = :golsCasa) AND " +
+           "(:golsVisitante IS NULL OR p.resultadoVisitante = :golsVisitante) AND " +
+           "(:dataHora IS NULL OR p.dataHora = :dataHora)",
+           countQuery = "SELECT COUNT(p) FROM PartidaEntity p WHERE " +
+           "(:estadio IS NULL OR UPPER(p.estadio) LIKE UPPER(CONCAT('%', :estadio, '%'))) AND " +
+           "(:golsCasa IS NULL OR p.resultadoCasa = :golsCasa) AND " +
+           "(:golsVisitante IS NULL OR p.resultadoVisitante = :golsVisitante) AND " +
+           "(:dataHora IS NULL OR p.dataHora = :dataHora)")
+    Page<PartidaEntity> findPartidasComFiltros(
+        @Param("estadio") String estadio,
+        @Param("golsCasa") Integer golsCasa,
+        @Param("golsVisitante") Integer golsVisitante,
+        @Param("dataHora") LocalDateTime dataHora,
+        Pageable pageable
+    );
+
+    // MÉTODOS BÁSICOS HERDADOS DO JpaRepository (GRÁTIS!):
+    // - save(PartidaEntity) - salvar partida
+    // - findAll() - buscar todas as partidas
+    // - findById(Long) - buscar partida por ID
+    // - deleteById(Long) - deletar partida por ID
+    // - count() - contar partidas
+    // - existsById(Long) - verificar se partida existe
 
 }
