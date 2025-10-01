@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 
 
 /**
- * Repository para operações com a entidade Clube
+ * Repository → faz as consultas SQL (SELECT, INSERT, UPDATE, DELETE)
  * Extende JpaRepository que já fornece métodos básicos (save, findById, findAll, delete, etc.)
- * Aqui definimos métodos personalizados para consultas específicas
+ * Defino métodos personalizados para consultas específicas
  */
 
 @Repository
