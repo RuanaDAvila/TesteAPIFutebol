@@ -55,12 +55,16 @@ public interface ClubeRepository extends JpaRepository<ClubeEntity, Long> {
         Pageable pageable
     );
 
-    
     // MÉTODOS BÁSICOS HERDADOS DO JpaRepository:
     // - save(ClubeEntity) - salvar clube
     // - findAll() - buscar todos
     // - findById(Long) - buscar por ID
     // - deleteById(Long) - deletar por ID
     // - count() - contar registros
+
+    //metodo wue o spring data jpa implementa automaticamente, verifica se nome e estado ja existem
+    boolean existsByNomeAndEstado(String nome, String estado);
+
+
 
 }

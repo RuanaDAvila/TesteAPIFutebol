@@ -2,11 +2,14 @@ package com.example.testeapifutebol.Service;
 
 import com.example.testeapifutebol.DTO.ClubeDTO;
 import com.example.testeapifutebol.Entity.ClubeEntity;
+import com.example.testeapifutebol.Excecao.ClubeExistenteExcecao;
+import com.example.testeapifutebol.Excecao.DadosInvalidosExcecao;
 import com.example.testeapifutebol.Repository.ClubeRepository;
 import jakarta.persistence.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
 import org.springframework.data.domain.Page;
@@ -15,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 /**
- * Service - Lógica de negócio para operações de Clube
  * Converte DTO ↔ Entity e coordena com Repository
  */
 
@@ -28,12 +30,28 @@ import org.springframework.data.domain.Sort;
 
 @Service
 public class ClubeService {
+
+    private static final Set<String> UFS_BR = Set.of
+            ("AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT",
+            "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO",
+             "RR", "SC", "SP", "SE", "TO");
+
     // Injeta o Repository para acessar o banco de dados
     private final ClubeRepository clubeRepository;
-
     // Construtor para injeção de dependência
     public ClubeService(ClubeRepository clubeRepository) {
         this.clubeRepository = clubeRepository;
+    }
+
+    public ClubeEntity salvarClube(ClubeEntity clube) {
+        //chama o metodo de verificacao no repositorio
+        if (clubeRepository.existsByNomeAndEstado(clube.getNome(), clube.getEstado())) {
+            //lanç a exceção customizada se o clube for duplicado
+            String mensagem = String.format("Já existe um clube com o nome '%s' no estado '%s'",
+                    clube.getNome(), clube.getEstado());
+            throw new ClubeExistenteExcecao(mensagem);//aí consegue usar a exceção existente.
+        }
+        return clubeRepository.save(clube);
     }
 
     /**
@@ -41,7 +59,41 @@ public class ClubeService {
      * Recebe: ClubeDTO (dados do Controller/Postman)
      * Retorna: ClubeDTO (dados salvos com ID gerado)
      */
-    public ClubeDTO saveClubeEntity(ClubeDTO clubeDTO) {
+    public ClubeDTO saveClubeEntity(ClubeDTO clubeDTO){
+            // Validar nome
+            if (clubeDTO.getNome() == null || clubeDTO.getNome().trim().isEmpty()) {
+                throw new DadosInvalidosExcecao("Nome do clube é obrigatório");
+            }// Validar tamanho mínimo do nome
+            if (clubeDTO.getNome().trim().length() < 2) {
+                throw new DadosInvalidosExcecao("Nome do clube deve ter 2 letras");
+            }
+            // Validar estado
+            if (clubeDTO.getEstado() == null || clubeDTO.getEstado().trim().isEmpty()) {
+                throw new DadosInvalidosExcecao("Estado é obrigatório");
+            }
+            // Validar tamanho do estado
+            if (clubeDTO.getEstado().trim().length() != 2) {
+                throw new DadosInvalidosExcecao("Estado deve ter exatamente 2 letras");
+            }
+            // Validar se estado existe no Brasil
+            if (!UFS_BR.contains(clubeDTO.getEstado().trim().toUpperCase())) {
+                throw new DadosInvalidosExcecao("Estado inválido");
+            }
+            // Validar data de criação
+            if (clubeDTO.getDatacriacao() == null) {
+                throw new DadosInvalidosExcecao("Data de criação é obrigatória");
+            }
+            // Validar se data não é no futuro
+            LocalDate dataInformada = LocalDate.parse(clubeDTO.getDatacriacao());
+            if (dataInformada.isAfter(LocalDate.now())) {
+                throw new DadosInvalidosExcecao("Data de criação não pode ser no futuro");
+            }
+            // Validar ativo
+            if (clubeDTO.getAtivo() == null) {
+                throw new DadosInvalidosExcecao("Ativo é obrigatório");
+            }
+
+
         // Converte DTO → Entity
         ClubeEntity clubeParaSalvar = new ClubeEntity();
         
@@ -56,6 +108,7 @@ public class ClubeService {
 
         //Converte a Entity salva de volta para DTO (para retornar ao Controller)
         ClubeDTO DTOResposta = new ClubeDTO();
+        DTOResposta.setId(clubeSalvo.getId());                              // Long → Long
         DTOResposta.setNome(clubeSalvo.getNome());                          // String → String
         DTOResposta.setEstado(clubeSalvo.getEstado());                      // String → String
         DTOResposta.setDatacriacao(clubeSalvo.getDatacriacao().toString()); // LocalDate → String
@@ -75,6 +128,7 @@ public class ClubeService {
         //Converte cada Entity para DTO usando Stream (programação funcional)
         return clubes.stream().map(clube -> {
             ClubeDTO dto = new ClubeDTO();
+            dto.setId(clube.getId());                              // Long → Long
             dto.setNome(clube.getNome());                          // String → String
             dto.setEstado(clube.getEstado());                      // String → String  
             dto.setDatacriacao(clube.getDatacriacao().toString()); // LocalDate → String
@@ -92,6 +146,37 @@ public class ClubeService {
         //  Busca o clube existente
         ClubeEntity clubeExistente = clubeRepository.findById(id).orElse(null);
         if (clubeExistente == null) return null;
+        if (clubeDTO.getNome() == null || clubeDTO.getNome().trim().isEmpty()) {
+            throw new DadosInvalidosExcecao("Nome do clube é obrigatório");
+        }// Validar tamanho mínimo do nome
+        if (clubeDTO.getNome().trim().length() < 2) {
+            throw new DadosInvalidosExcecao("Nome do clube deve ter 2 letras");
+        }
+        // Validar estado
+        if (clubeDTO.getEstado() == null || clubeDTO.getEstado().trim().isEmpty()) {
+            throw new DadosInvalidosExcecao("Estado é obrigatório");
+        }
+        // Validar tamanho do estado
+        if (clubeDTO.getEstado().trim().length() != 2) {
+            throw new DadosInvalidosExcecao("Estado deve ter exatamente 2 letras");
+        }
+        // Validar se estado existe no Brasil
+        if (!UFS_BR.contains(clubeDTO.getEstado().trim().toUpperCase())) {
+            throw new DadosInvalidosExcecao("Estado inválido");
+        }
+        // Validar data de criação
+        if (clubeDTO.getDatacriacao() == null) {
+            throw new DadosInvalidosExcecao("Data de criação é obrigatória");
+        }
+        // Validar se data não é no futuro
+        LocalDate dataInformada = LocalDate.parse(clubeDTO.getDatacriacao());
+        if (dataInformada.isAfter(LocalDate.now())) {
+            throw new DadosInvalidosExcecao("Data de criação não pode ser no futuro");
+        }
+        // Validar ativo
+        if (clubeDTO.getAtivo() == null) {
+            throw new DadosInvalidosExcecao("Ativo é obrigatório");
+        }
 
         // Atualiza os dados
         clubeExistente.setNome(clubeDTO.getNome());
@@ -102,6 +187,7 @@ public class ClubeService {
         ClubeEntity clubeAtualizado = clubeRepository.save(clubeExistente);
 
         ClubeDTO resposta = new ClubeDTO();
+        resposta.setId(clubeAtualizado.getId());
         resposta.setNome(clubeAtualizado.getNome());
         resposta.setEstado(clubeAtualizado.getEstado());
         resposta.setDatacriacao(clubeAtualizado.getDatacriacao().toString());
@@ -125,7 +211,6 @@ public class ClubeService {
             // Se chegou aqui, significa que não encontrou o clube
             return false; // Retorna "false" = "não consegui inativar porque não existe"
         }
-
         //MARCAR COMO INATIVO (SOFT DELETE)
         // Ao invés de apagar, só mudo o status de "S" (ativo) para "N" (inativo)
         clubeExistente.setAtivo("N");
@@ -142,26 +227,17 @@ public class ClubeService {
      * MÉTODO PARA BUSCAR UM CLUBE ESPECÍFICO PELO ID
      * O que faz?
      * - Procura um clube específico no banco de dados usando o ID
-     * - É como procurar uma pessoa específica na agenda pelo número do telefone
-     * - Diferente do "listar todos", este busca apenas 1 clube
-     * Exemplo prático:
-     * - Se você quer ver só o Flamengo (ID 1), usa este método
-     * - Se você quer ver só o Vasco (ID 3), usa este método
-     * - É mais rápido que buscar todos e depois filtrar
-     * Recebe: ID do clube (exemplo: 1, 2, 3...)
      * Retorna: ClubeDTO (dados do clube) ou null (se não encontrar)
      */
     public ClubeDTO findClubeById(Long id) {
         // PROCURAR O CLUBE NO BANCO DE DADOS
-        // É como procurar um contato específico na agenda pelo número
         // findById(id) = "procure exatamente o clube com esse ID"
         // orElse(null) = "se não encontrar, retorne null (vazio)"
         ClubeEntity clubeEncontrado = clubeRepository.findById(id).orElse(null);
         
-        // VERIFICAÇÃO: O clube existe?
+        // VERIFICA se clube existe
         if (clubeEncontrado == null) {
             // Se chegou aqui, significa que não encontrou o clube
-            // É como procurar o telefone 999999 na agenda e não achar ninguém
             return null; // Retorna null = "não encontrei esse clube"
         }
 
@@ -170,6 +246,7 @@ public class ClubeService {
         // Entity = formato do banco de dados
         // DTO = formato para enviar ao Postman/front-end
         ClubeDTO clubeParaRetornar = new ClubeDTO();
+        clubeParaRetornar.setId(clubeEncontrado.getId());                              // Long → Long
         clubeParaRetornar.setNome(clubeEncontrado.getNome());                          // String → String
         clubeParaRetornar.setEstado(clubeEncontrado.getEstado());                      // String → String
         clubeParaRetornar.setDatacriacao(clubeEncontrado.getDatacriacao().toString()); // LocalDate → String
@@ -188,32 +265,16 @@ public class ClubeService {
      * - Permite ordenação (ascendente/descendente por qualquer campo)
      * - É como uma busca avançada no Google: você pode filtrar, paginar e ordenar
      * 
-     * Exemplos práticos:
-     * - Buscar clubes do RJ: filtro estado = "RJ"
-     * - Buscar clubes ativos: filtro ativo = "S"
-     * - Buscar clubes com "Fla" no nome: filtro nome contém "Fla"
-     * - Ver página 2 com 5 clubes por página: page=1, size=5
-     * - Ordenar por nome A-Z: sort por nome ascendente
-     * 
-     * Parâmetros:
-     * - nome: filtrar clubes que contenham este texto no nome (opcional)
-     * - estado: filtrar clubes deste estado específico (opcional)
-     * - ativo: filtrar clubes ativos ("S") ou inativos ("N") (opcional)
-     * - pageable: configurações de paginação e ordenação
-     * 
      * Retorna: Page<ClubeDTO> (página com lista de clubes + informações de paginação)
      */
     public Page<ClubeDTO> findClubesComFiltros(String nome, String estado, String ativo, java.time.LocalDate datacriacao, Pageable pageable) {
-        // BUSCAR NO BANCO COM FILTROS - AGORA MUITO MAIS SIMPLES!
-        // Uma única chamada substitui toda aquela lógica complexa de if/else
-        // O @Query do Repository faz toda a mágica dos filtros opcionais
+        // busca no banco com filtros.
         Page<ClubeEntity> clubesEncontrados = clubeRepository.findClubesComFiltros(nome, estado, ativo, datacriacao, pageable);
-
-        
         // CONVERTER ENTITIES PARA DTOs
         // Converte os resultados para o formato de resposta
         Page<ClubeDTO> clubesParaRetornar = clubesEncontrados.map(clube -> {
             ClubeDTO dto = new ClubeDTO();
+            dto.setId(clube.getId());
             dto.setNome(clube.getNome());
             dto.setEstado(clube.getEstado());
             dto.setDatacriacao(clube.getDatacriacao().toString());
@@ -223,5 +284,6 @@ public class ClubeService {
 
         return clubesParaRetornar;
     }
+
 
 }
