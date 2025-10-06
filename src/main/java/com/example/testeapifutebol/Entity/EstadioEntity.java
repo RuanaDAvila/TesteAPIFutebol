@@ -20,7 +20,7 @@ public class EstadioEntity {
     private Long id;
 
     // Nome do estádio (campo obrigatório)
-    @Column(nullable = false) // NOT NULL no banco de dados
+    @Column(nullable = false, unique = true) // NOT NULL + UNIQUE
     private String nome;
 
     // Construtor com parâmetros (para criar estádio com dados)

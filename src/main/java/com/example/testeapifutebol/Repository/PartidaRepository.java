@@ -47,7 +47,6 @@ public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
     List<PartidaEntity> buscarPartidasEntreDatas(@Param("dataInicio") LocalDateTime dataInicio,
                                                  @Param("dataFim") LocalDateTime dataFim);
 
-    // Buscar partidas com filtros avançados, paginação e ordenação
     @Query(value = "SELECT p FROM PartidaEntity p WHERE " +
            "(:estadio IS NULL OR UPPER(p.estadio) LIKE UPPER(CONCAT('%', :estadio, '%'))) AND " +
            "(:golsCasa IS NULL OR p.resultadoCasa = :golsCasa) AND " +
@@ -63,8 +62,7 @@ public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
         @Param("golsCasa") Integer golsCasa,
         @Param("golsVisitante") Integer golsVisitante,
         @Param("dataHora") LocalDateTime dataHora,
-        Pageable pageable
-    );
+        Pageable pageable);
 
     // MÉTODOS BÁSICOS HERDADOS DO JpaRepository (GRÁTIS!):
     // - save(PartidaEntity) - salvar partida
@@ -75,3 +73,5 @@ public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
     // - existsById(Long) - verificar se partida existe
 
 }
+
+// Buscar partidas c

@@ -43,7 +43,6 @@ public class ClubeControler {
      * - Lista clubes com filtros opcionais (nome, estado, situação)
      * - Permite paginação (dividir resultados em páginas)
      * - Permite ordenação (ascendente/descendente por qualquer campo)
-     * - É como uma busca avançada no Google ou Amazon
      * 
      * Como usar? Exemplos de URLs:
      *
@@ -55,9 +54,7 @@ public class ClubeControler {
      * - GET /clubes/buscar?nome=Fla&estado=RJ     → Clubes com "Fla" no nome E do RJ
      * 
      * PAGINAÇÃO:
-     * - GET /clubes/buscar?page=0&size=5          → Primeira página, 5 clubes por página
      * - GET /clubes/buscar?page=1&size=10         → Segunda página, 10 clubes por página
-     * - page: número da página (inicia em 0)
      * - size: quantidade de itens por página
      * 
      * ORDENAÇÃO:
@@ -65,7 +62,7 @@ public class ClubeControler {
      * - GET /clubes/buscar?sort=nome,desc         → Ordenar por nome Z-A
      * - GET /clubes/buscar?sort=datacriacao,desc  → Ordenar por data (mais recente primeiro)
      * - sortBy: campo para ordenar (nome, estado, datacriacao)
-     * - sortDir: direção (asc ou desc)
+     * - sortDir: ORDEM (asc ou desc)
      * 
      * COMBINAÇÕES:
      * - GET /clubes/buscar?estado=RJ&ativo=S&datacriacao=2024-01-15&sort=nome,asc&page=0&size=5
@@ -142,7 +139,6 @@ public class ClubeControler {
             return new ResponseEntity<>(clubeEncontrado, HttpStatus.OK); // 200 - Clube encontrado
         }
     }
-
     /**
      * DELETE /clubes/{id} - Inativar clube (soft delete)
      * Não remove do banco, apenas muda status de "S" para "N"
@@ -154,7 +150,7 @@ public class ClubeControler {
         // @PathVariable pega o {id} da URL e coloca na variável "id"
         // Exemplo: se URL for /clubes/5, então id = 5
 
-        // Chama o Service para fazer o trabalho pesado (inativar o clube)
+        // Chama o Service para inativar o clube
         boolean inativado = clubeService.inativarClubeEntity(id);
         
         // Verifica se conseguiu inativar o clube
@@ -166,3 +162,13 @@ public class ClubeControler {
     }
 
 }
+
+
+
+
+
+
+
+
+
+

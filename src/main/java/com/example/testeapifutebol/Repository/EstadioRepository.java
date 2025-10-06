@@ -11,5 +11,6 @@ public interface EstadioRepository extends JpaRepository<EstadioEntity, Long> {
     // Método customizado: busca estádios por nome (busca parcial, case insensitive)
     @Query("SELECT e FROM EstadioEntity e WHERE UPPER(e.nome) LIKE UPPER(CONCAT('%', :nome, '%'))")
     List<EstadioEntity> buscarEstadiosPorNome(String nome);
-
+    // Método para verificar se estádio já existe (nome exato)
+    boolean existsByNome(String nome);
 }

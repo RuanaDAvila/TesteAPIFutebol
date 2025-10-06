@@ -2,6 +2,7 @@ package com.example.testeapifutebol.Service;
 
 import com.example.testeapifutebol.DTO.EstadioDTO;
 import com.example.testeapifutebol.Entity.EstadioEntity;
+import com.example.testeapifutebol.Excecao.EstadioExistenteExcecao;
 import com.example.testeapifutebol.Repository.EstadioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,11 @@ public class EstadioService {
     // Cadastra novo estádio no banco de dados
     public EstadioDTO cadastrarEstadio(EstadioDTO estadioDTO) {
         System.out.println("Recebido: " + estadioDTO.getName());
+
+        //Verificar se estádio já existe (FAZ PARTE DAS MINHAS EXCECOES)
+        if (estadioRepository.existsByNome(estadioDTO.getName())) {
+            throw new EstadioExistenteExcecao("Estádio '" + estadioDTO.getName() + "' já existe no sistema");
+        }
         // Converte DTO → Entity para salvar no banco
         EstadioEntity estadioEntity = new EstadioEntity();
         estadioEntity.setNome(estadioDTO.getName()); // DTO.name → Entity.nome

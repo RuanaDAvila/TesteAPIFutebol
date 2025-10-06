@@ -11,6 +11,7 @@ import lombok.Data;
 
 public class ClubeDTO {
     //para receber dados
+    private Long id;
     private String nome;
     private String estado;
     private String datacriacao;

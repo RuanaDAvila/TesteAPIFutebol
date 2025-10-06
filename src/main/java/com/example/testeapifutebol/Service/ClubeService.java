@@ -92,6 +92,11 @@ public class ClubeService {
             if (clubeDTO.getAtivo() == null) {
                 throw new DadosInvalidosExcecao("Ativo é obrigatório");
             }
+            
+            // Validar se já existe clube com mesmo nome e estado
+            if (clubeRepository.existsByNomeAndEstado(clubeDTO.getNome(), clubeDTO.getEstado())) {
+                throw new ClubeExistenteExcecao("Já existe um clube com o nome '" + clubeDTO.getNome() + "' no estado '" + clubeDTO.getEstado() + "'");
+            }
 
 
         // Converte DTO → Entity
