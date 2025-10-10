@@ -2,7 +2,7 @@ package com.example.testeapifutebol.Service;
 
 import com.example.testeapifutebol.DTO.EstadioDTO;
 import com.example.testeapifutebol.Entity.EstadioEntity;
-import com.example.testeapifutebol.Excecao.EstadioExistenteExcecao;
+import com.example.testeapifutebol.Excecao.RegraDeExcecao409;
 import com.example.testeapifutebol.Repository.EstadioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,7 +23,7 @@ public class EstadioService {
 
         //Verificar se estádio já existe (FAZ PARTE DAS MINHAS EXCECOES)
         if (estadioRepository.existsByNome(estadioDTO.getName())) {
-            throw new EstadioExistenteExcecao("Estádio '" + estadioDTO.getName() + "' já existe no sistema");
+            throw new RegraDeExcecao409("Estádio '" + estadioDTO.getName() + "' já existe no sistema");
         }
         // Converte DTO → Entity para salvar no banco
         EstadioEntity estadioEntity = new EstadioEntity();
