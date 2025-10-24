@@ -11,6 +11,9 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.hibernate.sql.ast.Clause.WHERE;
+
+
 /**
  * Repository para operações com a entidade Partida
  * Extende JpaRepository que já fornece métodos básicos (save, findById, findAll, delete, etc.)
@@ -18,35 +21,38 @@ import java.util.List;
  */
 @Repository
 public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
-    
 
-    
-
-    // Buscar partidas por clube, por estádio, por data, etc.
-    /**
-     * 1. BUSCAR PARTIDAS POR CLUBE (casa ou visitante)
-     */
-    @Query("SELECT p FROM PartidaEntity p WHERE p.clubeCasaId = :clubeId OR p.clubeVisitanteId = :clubeId")
-    List<PartidaEntity> buscarPartidasPorClube(@Param("clubeId") Long clubeId);
+    //Busca partidas de um clube específico (mandante ou visitante) dentro de um período
+    @Query("SELECT p FROM PartidaEntity p " +
+           "WHERE (p.clubeCasaId = :clubeId OR p.clubeVisitanteId = :clubeId) " +
+           "AND p.dataHora BETWEEN :dataInicio AND :dataFim")
+    List<PartidaEntity> buscarPartidasPorClube(
+            @Param("clubeId") Long clubeId,
+            @Param("dataInicio") LocalDateTime dataInicio,
+            @Param("dataFim") LocalDateTime dataFim
+    );
 
     // Buscar partidas por estádio (busca parcial)
     @Query("SELECT p FROM PartidaEntity p WHERE UPPER(p.estadio) LIKE UPPER(CONCAT('%', :estadio, '%'))")
     List<PartidaEntity> buscarPartidasPorEstadio(@Param("estadio") String estadio);
-
     // Buscar partidas por data específica
     @Query("SELECT p FROM PartidaEntity p WHERE DATE(p.dataHora) = DATE(:data)")
     List<PartidaEntity> buscarPartidasPorData(@Param("data") LocalDateTime data);
 
     // Buscar partidas por resultado específico
     @Query("SELECT p FROM PartidaEntity p WHERE p.resultadoCasa = :golsCasa AND p.resultadoVisitante = :golsVisitante")
-    List<PartidaEntity> buscarPartidasPorResultado(@Param("golsCasa") Integer golsCasa,
-                                                   @Param("golsVisitante") Integer golsVisitante);
+    List<PartidaEntity> buscarPartidasPorResultado(
+            @Param("golsCasa") Integer golsCasa,
+            @Param("golsVisitante") Integer golsVisitante
+    );
 
     // Buscar partidas entre duas datas
     @Query("SELECT p FROM PartidaEntity p WHERE p.dataHora BETWEEN :dataInicio AND :dataFim")
-    List<PartidaEntity> buscarPartidasEntreDatas(@Param("dataInicio") LocalDateTime dataInicio,
-                                                 @Param("dataFim") LocalDateTime dataFim);
-
+    List<PartidaEntity> buscarPartidasEntreDatas(
+            @Param("dataInicio") LocalDateTime dataInicio,
+            @Param("dataFim") LocalDateTime dataFim
+    );
+    //Busca paginada de partidas com filtros opcionais
     @Query(value = "SELECT p FROM PartidaEntity p WHERE " +
            "(:estadio IS NULL OR UPPER(p.estadio) LIKE UPPER(CONCAT('%', :estadio, '%'))) AND " +
            "(:golsCasa IS NULL OR p.resultadoCasa = :golsCasa) AND " +
@@ -64,6 +70,9 @@ public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
         @Param("dataHora") LocalDateTime dataHora,
         Pageable pageable);
 
+
+
+
     // MÉTODOS BÁSICOS HERDADOS DO JpaRepository (GRÁTIS!):
     // - save(PartidaEntity) - salvar partida
     // - findAll() - buscar todas as partidas
@@ -74,4 +83,3 @@ public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
 
 }
 
-// Buscar partidas c

@@ -1,13 +1,17 @@
 package com.example.testeapifutebol.Service;
 
 import com.example.testeapifutebol.DTO.PartidaDTO;
+import com.example.testeapifutebol.Entity.ClubeEntity;
 import com.example.testeapifutebol.Entity.PartidaEntity;
+import com.example.testeapifutebol.Excecao.RegraDeExcecao409;
+import com.example.testeapifutebol.Excecao.RegraDeInvalidosExcecao400;
+import com.example.testeapifutebol.Excecao.RegraDoNaoEncontradoExcecao404;
+import com.example.testeapifutebol.Repository.ClubeRepository;
+import com.example.testeapifutebol.Repository.EstadioRepository;
 import com.example.testeapifutebol.Repository.PartidaRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -22,10 +26,17 @@ public class PartidaService {
     
     // Injeta o Repository para acessar o banco de dados
     private final PartidaRepository partidaRepository;
+    //injeta o repository do clube
+    private final ClubeRepository clubeRepository;
+    //injeta o repository do estadio
+    private final EstadioRepository estadioRepository;
+
 
     // Construtor para injeção de dependência
-    public PartidaService(PartidaRepository partidaRepository) {
+    public PartidaService(PartidaRepository partidaRepository, ClubeRepository clubeRepository, EstadioRepository estadioRepository) {
         this.partidaRepository = partidaRepository;
+        this.clubeRepository = clubeRepository;
+        this.estadioRepository = estadioRepository;
     }
 
     /**
@@ -34,8 +45,59 @@ public class PartidaService {
      * Retorna: PartidaDTO (dados salvos com ID gerado)
      */
     public PartidaDTO savePartidaEntity(PartidaDTO partidaDTO) {
+        //validar se 2 clubes são iguais, retorno 400
+        if (partidaDTO.getClubeCasaId().equals(partidaDTO.getClubeVisitanteId())) {
+            throw new RegraDeInvalidosExcecao400("Os Clubes da casa e visitantes não podem ser iguais");
+        }
+
+        //verifica se o clube da casa existe
+        if (!clubeRepository.existsById(partidaDTO.getClubeVisitanteId())) {
+            throw new RegraDeInvalidosExcecao400("Clube da casa não encontrado");
+        }
+        //verifica se o clube visitante existe
+        if (!clubeRepository.existsById(partidaDTO.getClubeVisitanteId())) {
+            throw new RegraDeInvalidosExcecao400("Clube visitante não encontrado");
+        }
+        //verifica se o estadio existe
+        if (!estadioRepository.existsById(Long.valueOf(partidaDTO.getEstadio()))) {
+            throw new RegraDeInvalidosExcecao400("Estádio não encontrado");
+        }
+        //verifica/valida gols negativos, retrna 400.
+        if (partidaDTO.getResultadoCasa() < 0 || partidaDTO.getResultadoVisitante() < 0) {
+            throw new RegraDeInvalidosExcecao400("O número de Gols não podem ser negativos.");
+        }
+        //valida se a data/hora da partida é anterior a data atual, retorna 400.
+        if (partidaDTO.getDataHora().isBefore(LocalDateTime.now())) {
+            throw new RegraDeInvalidosExcecao400("A data da partida não pode ser anterior a data atual.");
+        }
+        //validação de data da partida e data de criação do clube, retorno 409
+        //busca do clube, que ta no entity
+        ClubeEntity clubeCasa = clubeRepository.findById(partidaDTO.getClubeCasaId()).orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube da casa não encontrado"));
+        ClubeEntity clubeVisitante = clubeRepository.findById(partidaDTO.getClubeVisitanteId()).orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube visitante não encontrado"));
+        if (partidaDTO.getDataHora().isBefore(clubeCasa.getDataCriacao().atStartOfDay())) {
+            throw new RegraDeExcecao409("A data da partida é anterior à data de criação do clube da casa");
+        }
+        if (partidaDTO.getDataHora().isBefore(clubeVisitante.getDataCriacao().atStartOfDay())) {
+            throw new RegraDeExcecao409("A data da partida é anterior à data de criação do clube visitante");
+        }
+        //verifica status do clube da casa
+        if ("N".equalsIgnoreCase(clubeCasa.getAtivo())) {
+            throw new RegraDeExcecao409("Clube da casa está inativo e não pode participar da partida");
+        }
+        //verifica status do clube visitante
+        if ("N".equalsIgnoreCase(clubeVisitante.getAtivo())) {
+            throw new RegraDeExcecao409("Clube visitante está inativo e não pode participar da partida");
+        }
+
+
+
+
+
+
         // Converte DTO → Entity
         PartidaEntity partidaParaSalvar = new PartidaEntity();
+
+
         
         // Copia dados do DTO para a Entity (todos os campos obrigatórios)
         partidaParaSalvar.setClubeCasaId(partidaDTO.getClubeCasaId());
@@ -127,9 +189,15 @@ public class PartidaService {
         return true; // Retorna "true" = "consegui deletar com sucesso"
     }
 
-    //Buscar partidas por clube (casa ou visitante)
-    public List<PartidaDTO> buscarPartidasPorClube(Long clubeId) {
-        List<PartidaEntity> partidas = partidaRepository.buscarPartidasPorClube(clubeId);
+    /**
+     * Busca partidas de um clube específico (como mandante ou visitante) dentro de um período
+     * @param clubeId ID do clube a ser pesquisado
+     * @param dataInicio Data de início do período (inclusive)
+     * @param dataFim Data de fim do período (inclusive)
+     * @return Lista de partidas que atendem aos critérios
+     */
+    public List<PartidaDTO> buscarPartidasPorClube(Long clubeId, LocalDateTime dataInicio, LocalDateTime dataFim) {
+        List<PartidaEntity> partidas = partidaRepository.buscarPartidasPorClube(clubeId, dataInicio, dataFim);
         return converterListaEntityParaDTO(partidas);
     }
 

@@ -38,13 +38,9 @@ public class ClubeControler {
 
     /**
      * ENDPOINT GET AVANÇADO - LISTAR CLUBES COM FILTROS, PAGINAÇÃO E ORDENAÇÃO
-     *
-     * O que faz?
      * - Lista clubes com filtros opcionais (nome, estado, situação)
      * - Permite paginação (dividir resultados em páginas)
      * - Permite ordenação (ascendente/descendente por qualquer campo)
-     * 
-     * Como usar? Exemplos de URLs:
      *
      * FILTROS:
      * - GET /clubes/buscar?nome=Flamengo          → Clubes com "Flamengo" no nome
@@ -70,12 +66,10 @@ public class ClubeControler {
      *
      * RETORNOS:
      * - 200 OK + lista de clubes (mesmo que vazia)
-     * - Nunca retorna 404, sempre 200 OK (conforme especificação)
+     * - 404 not foud
      */
     @GetMapping("/buscar") // URL: /clubes/buscar
     public ResponseEntity<Page<ClubeDTO>> buscarClubesComFiltros(
-            // PARÂMETROS DE FILTRO (todos opcionais)
-            // @RequestParam(required = false) = parâmetro opcional na URL
             @RequestParam(required = false) String nome,     // ?nome=Flamengo
             @RequestParam(required = false) String estado,   // ?estado=RJ
             @RequestParam(required = false) String ativo,    // ?ativo=S
@@ -93,41 +87,33 @@ public class ClubeControler {
             Sort.Direction.DESC : Sort.Direction.ASC;
         
         // Cria configuração de paginação e ordenação
-        // Pageable = configurações de página, tamanho e ordenação
+        // Pageable é configurações de página, tamanho e ordenação
         // É como dizer: "quero a página 2, com 5 itens, ordenados por nome A-Z"
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
         // Busca clubes aplicando filtros, paginação e ordenação
         // Passa todos os filtros e configurações para o Service fazer a busca
         Page<ClubeDTO> clubesEncontrados = clubeService.findClubesComFiltros(nome, estado, ativo, datacriacao, pageable);
-        
         return new ResponseEntity<>(clubesEncontrados, HttpStatus.OK); // 200
     }
 
     // PUT /clubes/{id} - Atualizar clube existente
     @PutMapping("/{id}")
     public ResponseEntity<ClubeDTO> updateClube(@PathVariable Long id, @RequestBody ClubeDTO clubeDTO) {
+        //chama o serviço para atualizar, esse servoço ja trata as exceções 400, 404 e 409
         ClubeDTO clubeAtualizado = clubeService.updateClubeEntity(id, clubeDTO);
-
-        if (clubeAtualizado == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 - Clube não encontrado
-        }
-
-        return new ResponseEntity<>(clubeAtualizado, HttpStatus.OK); // 200 - Atualizado com sucesso
+        //se chegou aqui, deu tudo certo e retornou 200 ok
+        return ResponseEntity.ok(clubeAtualizado);
     }
 
     /**
      * ENDPOINT GET POR ID - BUSCAR UM CLUBE ESPECÍFICO
      * Busca clubes aplicando filtros, paginação e ordenação
-     * Como usar: GET http://localhost:8080/clubes/1 (onde 1 é o ID do clube que você quer ver)
-     * 
-     * Exemplo: GET /clubes/1 retorna apenas o clube com ID 1
      * Retorna: 200 OK + dados do clube, ou 404 se não encontrar
      */
     @GetMapping("/{id}") // Diz ao Spring: "quando alguém fizer GET /clubes/1, execute este método"
     public ResponseEntity<ClubeDTO> buscarClubePorId(@PathVariable Long id) {
         // @PathVariable pega o {id} da URL e coloca na variável "id"
-        // Exemplo: se URL for /clubes/5, então id = 5
 
         // Chama o Service para buscar o clube específico no banco de dados
         ClubeDTO clubeEncontrado = clubeService.findClubeById(id);
@@ -139,18 +125,16 @@ public class ClubeControler {
             return new ResponseEntity<>(clubeEncontrado, HttpStatus.OK); // 200 - Clube encontrado
         }
     }
-    /**
-     * DELETE /clubes/{id} - Inativar clube (soft delete)
-     * Não remove do banco, apenas muda status de "S" para "N"
-     * Exemplo: DELETE /clubes/1 inativa o clube com ID 1
-     * Retorna: 204 No Content se sucesso, ou 404 se não encontrar
-     */
+
+    //DELETE /clubes/{id} - Inativar clube (soft delete)
+     //Não remove do banco, apenas muda status de "S" para "N"
+    //Retorna: 204 No Content se sucesso, ou 404 se não encontrar
     @DeleteMapping("/{id}") // Diz ao Spring: "quando alguém fizer DELETE /clubes/1, execute este método"
     public ResponseEntity<Void> inativarClube(@PathVariable Long id) {
         // @PathVariable pega o {id} da URL e coloca na variável "id"
         // Exemplo: se URL for /clubes/5, então id = 5
 
-        // Chama o Service para inativar o clube
+        // Chama o Service para inativar o clube, retorno 404
         boolean inativado = clubeService.inativarClubeEntity(id);
         
         // Verifica se conseguiu inativar o clube

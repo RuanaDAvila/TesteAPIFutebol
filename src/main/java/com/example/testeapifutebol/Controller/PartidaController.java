@@ -101,10 +101,22 @@ public class PartidaController {
         }
     }
 
-    // GET /partidas/clube/{clubeId} - Buscar partidas por clube
+    // GET /partidas/clube/{clubeId} - Buscar partidas por clube em um período
     @GetMapping("/clube/{clubeId}")
-    public ResponseEntity<List<PartidaDTO>> buscarPartidasPorClube(@PathVariable Long clubeId) {
-        List<PartidaDTO> partidas = partidaService.buscarPartidasPorClube(clubeId);
+    public ResponseEntity<List<PartidaDTO>> buscarPartidasPorClube(
+            @PathVariable Long clubeId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataFim) {
+        
+        // Se as datas não forem fornecidas, usa valores padrão
+        if (dataInicio == null) {
+            dataInicio = LocalDateTime.of(1900, 1, 1, 0, 0); // Data antiga
+        }
+        if (dataFim == null) {
+            dataFim = LocalDateTime.of(2100, 12, 31, 23, 59, 59); // Data futura
+        }
+        
+        List<PartidaDTO> partidas = partidaService.buscarPartidasPorClube(clubeId, dataInicio, dataFim);
         return new ResponseEntity<>(partidas, HttpStatus.OK);
     }
 

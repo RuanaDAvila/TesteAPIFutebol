@@ -35,7 +35,7 @@ import java.time.LocalDate;
     @Column(nullable = false, length = 1)
     private String ativo;
 
-    // Construtor com todos os campos (poderia ter feito um a um, tipo separado)
+    // Construtor com todos os campos (eu poderia ter feito um a um, tipo separado)
     // Recebe String para datacriacao e converte internamente para LocalDate
     public ClubeEntity(String nome, String estado, String datacriacao, String ativo) {
         this.nome = nome;
@@ -64,11 +64,11 @@ import java.time.LocalDate;
         this.estado = estado;
     }
 
-    public LocalDate getDatacriacao() {
+    public LocalDate getDataCriacao() {
         return datacriacao;
     }
 
-    public void setDatacriacao(LocalDate datacriacao) {
+    public void setDataCriacao(LocalDate datacriacao) {
         this.datacriacao = datacriacao;
     }
 
