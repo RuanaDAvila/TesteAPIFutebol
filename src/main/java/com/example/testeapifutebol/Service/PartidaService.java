@@ -40,7 +40,6 @@ public class PartidaService {
 
     //Salva uma nova partida no banco de dados
     //Recebe: PartidaDTO (dados do Controller/Postman) e Retorna: PartidaDTO (dados salvos com ID gerado)
-
     public PartidaDTO savePartidaEntity(PartidaDTO partidaDTO) {
         // Validações iniciais
         validarDadosBasicos(partidaDTO);
@@ -103,12 +102,7 @@ public class PartidaService {
         }).collect(Collectors.toList()); // Coleta tudo numa List<PartidaDTO>
     }
 
-    /**
-     * Busca uma partida específica pelo ID
-     * @param id ID da partida a ser buscada
-     * @return PartidaDTO com os dados da partida
-     * @throws RegraDoNaoEncontradoExcecao404 Se a partida não for encontrada
-     */
+    //Busca uma partida específica pelo ID
     public PartidaDTO findPartidaById(Long id) {
         // Busca a partida no banco de dados, lança exceção se não encontrar
         PartidaEntity partidaEncontrada = partidaRepository.findById(id)
@@ -126,11 +120,7 @@ public class PartidaService {
         return partidaParaRetornar;
     }
 
-    /**
-     * Deleta uma partida do banco de dados
-     * @param id ID da partida a ser deletada
-     * @throws RegraDoNaoEncontradoExcecao404 Se a partida não for encontrada
-     */
+
     public void deletePartidaEntity(Long id) {
         // Verifica se a partida existe
         if (!partidaRepository.existsById(id)) {
@@ -141,13 +131,7 @@ public class PartidaService {
         partidaRepository.deleteById(id);
     }
 
-    /**
-     * Busca partidas de um clube específico (como mandante ou visitante) dentro de um período
-     * @param clubeId ID do clube a ser pesquisado
-     * @param dataInicio Data de início do período (inclusive)
-     * @param dataFim Data de fim do período (inclusive)
-     * @return Lista de partidas que atendem aos critérios
-     */
+    //Busca partidas de um clube específico (como mandante ou visitante) dentro de um período
     public List<PartidaDTO> buscarPartidasPorClube(Long clubeId, LocalDateTime dataInicio, LocalDateTime dataFim) {
         List<PartidaEntity> partidas = partidaRepository.buscarPartidasPorClube(clubeId, dataInicio, dataFim);
         return converterListaEntityParaDTO(partidas);
@@ -255,10 +239,7 @@ public class PartidaService {
         return converterListaEntityParaDTO(partidas);
     }
 
-    /**
-     * Converte uma lista de PartidaEntity para PartidaDTO
-     * Método auxiliar para evitar repetição de código
-     */
+    //Converte uma lista de PartidaEntity para PartidaDTO, metodo auxiliar para evitar repeticao de cod.
     private List<PartidaDTO> converterListaEntityParaDTO(List<PartidaEntity> partidas) {
         return partidas.stream().map(partida -> {
             PartidaDTO dto = new PartidaDTO();
@@ -341,13 +322,7 @@ public class PartidaService {
         }
     }
 
-    /**
-     * Valida a data da partida em relação à data de criação dos clubes
-     * @param dataHora Data e hora da partida
-     * @param clubeCasa Clube da casa
-     * @param clubeVisitante Clube visitante
-     * @throws RegraDeExcecao409 Se a data for inválida
-     */
+    //Valida a data da partida em relação à data de criação dos clubes
     private void validarDataPartida(LocalDateTime dataHora, ClubeEntity clubeCasa, ClubeEntity clubeVisitante) {
         LocalDateTime agora = LocalDateTime.now();
         
@@ -366,12 +341,7 @@ public class PartidaService {
         }
     }
 
-    /**
-     * Valida o status dos clubes (devem estar ativos)
-     * @param clubeCasa Clube da casa
-     * @param clubeVisitante Clube visitante
-     * @throws RegraDeExcecao409 Se algum clube estiver inativo
-     */
+    //Valida o status dos clubes (devem estar ativos)
     private void validarStatusDosClubes(ClubeEntity clubeCasa, ClubeEntity clubeVisitante) {
         if ("N".equalsIgnoreCase(clubeCasa.getAtivo())) {
             throw new RegraDeExcecao409("O clube da casa " + clubeCasa.getNome() + " está inativo");
@@ -382,12 +352,7 @@ public class PartidaService {
         }
     }
 
-    /**
-     * Valida conflitos de horários para a partida
-     * @param partidaDTO DTO com os dados da partida
-     * @param idPartidaAtual ID da partida atual (null se for uma nova partida)
-     * @throws RegraDeExcecao409 Se houver conflito de horários
-     */
+    //Valida conflitos de horários para a partida
     private void validarConflitoDeHorarios(PartidaDTO partidaDTO, Long idPartidaAtual) {
         // Verifica se já existe partida no mesmo estádio no mesmo dia
         if (partidaRepository.existsByEstadioAndDataHora(partidaDTO.getEstadio(), partidaDTO.getDataHora(), idPartidaAtual)) {
