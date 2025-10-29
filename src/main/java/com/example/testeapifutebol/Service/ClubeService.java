@@ -6,14 +6,27 @@ import com.example.testeapifutebol.Excecao.RegraDeExcecao409;
 import com.example.testeapifutebol.Excecao.RegraDeInvalidosExcecao400;
 import com.example.testeapifutebol.Excecao.RegraDoNaoEncontradoExcecao404;
 import com.example.testeapifutebol.Repository.ClubeRepository;
+import com.example.testeapifutebol.Repository.PartidaRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.example.testeapifutebol.DTO.RankingClubeDTO;
+import com.example.testeapifutebol.DTO.RetrospectoClubeDTO;
+import com.example.testeapifutebol.Entity.PartidaEntity;
+import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Comparator;
+import java.util.ArrayList;
+import com.example.testeapifutebol.DTO.RetrospectoAdversarioDTO;
+import com.example.testeapifutebol.DTO.ConfrontoDiretoDTO;
 
 
 
@@ -35,15 +48,19 @@ public class ClubeService {
 
     // Injeta o Repository para acessar o banco de dados
     private final ClubeRepository clubeRepository;
-    // Construtor para injeção de dependência
-    public ClubeService(ClubeRepository clubeRepository) {
+    private final PartidaRepository partidaRepository;
+
+    @Autowired
+    public ClubeService(ClubeRepository clubeRepository, PartidaRepository partidaRepository) {
         this.clubeRepository = clubeRepository;
+        this.partidaRepository = partidaRepository;
     }
 
     public ClubeEntity salvarClube(ClubeEntity clube) {
-        //chama o metodo de verificacao no
+        //chama o metodo de verificacao no repository
         if (clubeRepository.existsByNomeAndEstado(clube.getNome(), clube.getEstado())) {
-            //lanç a exceção customizada se o clube for duplicado
+
+            //lança exceção customizada se o clube for duplicado
             String mensagem = String.format("Já existe um clube com o nome '%s' no estado '%s'",
                     clube.getNome(), clube.getEstado());
             throw new RegraDeExcecao409(mensagem);//aí consegue usar a exceção existente.
@@ -52,11 +69,7 @@ public class ClubeService {
     }
 
 
-    /**
-     * Salva um novo clube no banco de dados
-     * Recebe: ClubeDTO (dados do Controller/Postman)
-     * Retorna: ClubeDTO (dados salvos com ID gerado)
-     */
+    //Salva um novo clube no banco de dados, Recebe: ClubeDTO (dados do Controller/Postman) e Retorna: ClubeDTO (dados salvos com ID gerado)
     public ClubeDTO saveClubeEntity(ClubeDTO clubeDTO){
             // Validar nome
             if (clubeDTO.getNome() == null || clubeDTO.getNome().trim().isEmpty()) {
@@ -145,10 +158,7 @@ public class ClubeService {
         }).collect(Collectors.toList()); // Coleta tudo numa List<ClubeDTO>
     }
 
-    /**
-     * Atualiza um clube existente no banco de dados
-     * Recebe: ID do clube + ClubeDTO com novos dados
-     */
+    //Atualiza um clube existente no banco de dados, Recebe: ID do clube + ClubeDTO com novos dados
     public ClubeDTO updateClubeEntity(Long id, ClubeDTO clubeDTO) {
         // Busca o clube existente
         ClubeEntity clubeExistente = clubeRepository.findById(id)
@@ -218,22 +228,15 @@ public class ClubeService {
     }
 
 
-     //Inativa um clube (soft delete)
-     //Muda status de "S" para "N" sem deletar do banco
+     //Inativa um clube (soft delete), Muda status de "S" para "N" sem deletar do banco
     public boolean inativarClubeEntity(Long id) {
-        //busca paadrozizada, se nao enconttar, lança 404
-        // findById(id) = "procure o clube com esse ID"
-        // orElse(null) = "se não encontrar, retorne null (vazio)"
         ClubeEntity clubeExistente = clubeRepository.findById(id).orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube com ID "+id+" não foi encontrado"));
 
-        //MARCAR COMO INATIVO (SOFT DELETE)
-        // Ao invés de apagar, só mudo o status de "S" (ativo) para "N" (inativo)
+        //MARCAR COMO INATIVO (SOFT DELETE),Ao invés de apagar, só mudo o status de "S" (ativo) para "N" (inativo)
         clubeExistente.setAtivo("N");
 
-        //SALVAR A ALTERAÇÃO NO BANCO DE DADOS
-        // O Spring pega o objeto modificado e atualiza no MySQL
+        //SALVAR A ALTERAÇÃO NO BANCO DE DADOS, O Spring pega o objeto modificado e atualiza no MySQL
         clubeRepository.save(clubeExistente);
-        // SUCESSO! Clube foi inativado
         return true; // Retorna "true" = "consegui inativar com sucesso"
     }
 
@@ -242,13 +245,9 @@ public class ClubeService {
      //Procura um clube específico no banco de dados usando o ID
     public ClubeDTO findClubeById(Long id) {
         // Procura O CLUBE NO BANCO DE DADOS E lança 404 se ñ existir
-        // findById(id) = "procure exatamente o clube com esse ID"
-        // orElse(null) = "se não encontrar, retorne null (vazio)"
         ClubeEntity clubeEncontrado = clubeRepository.findById(id).orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube com ID "+id+" não foi encontrado"));
 
-        //CONVERTER ENTITY PARA DTO
-        // Entity = formato do banco de dados
-        // DTO = formato para enviar ao Postman/front-end
+        //CONVERTER ENTITY PARA DTO, Entity = formato do banco de dados e DTO = formato para enviar ao Postman/front-end
         ClubeDTO clubeParaRetornar = new ClubeDTO();
         clubeParaRetornar.setId(clubeEncontrado.getId());                              // Long → Long
         clubeParaRetornar.setNome(clubeEncontrado.getNome());                          // String → String
@@ -279,8 +278,7 @@ public class ClubeService {
         }
         // busca no banco com filtros.
         Page<ClubeEntity> clubesEncontrados = clubeRepository.findClubesComFiltros(nome, estado, ativo, datacriacao, pageable);
-        // CONVERTER ENTITIES PARA DTOs
-        // Converte os resultados para o formato de resposta
+        // CONVERTER ENTITIES PARA DTOs, Converte os resultados para o formato de resposta
         Page<ClubeDTO> clubesParaRetornar = clubesEncontrados.map(clube -> {
             ClubeDTO dto = new ClubeDTO();
             dto.setId(clube.getId());
@@ -293,5 +291,265 @@ public class ClubeService {
         return clubesParaRetornar;
     }
 
+    /**
+     * Busca o retrospecto completo de um clube
+     * @param clubeId ID do clube
+     * @return DTO com as estatísticas do retrospecto
+     * @throws RegraDoNaoEncontradoExcecao404 se o clube não for encontrado
+     */
+    public RetrospectoClubeDTO buscarRetrospectoClube(Long clubeId) {
+        // Verifica se o clube existe
+        ClubeEntity clube = clubeRepository.findById(clubeId)
+            .orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube não encontrado com o ID: " + clubeId));
+        
+        // Busca todas as partidas do clube (como mandante ou visitante)
+        // Usando datas extremas para buscar todas as partidas
+        LocalDateTime dataInicio = LocalDateTime.MIN;
+        LocalDateTime dataFim = LocalDateTime.MAX;
+        List<PartidaEntity> partidas = partidaRepository.buscarPartidasPorClube(clubeId, dataInicio, dataFim);
+        
+        // Cria o DTO de retorno
+        RetrospectoClubeDTO retrospecto = new RetrospectoClubeDTO();
+        retrospecto.setClubeId(clube.getId());
+        retrospecto.setClubeNome(clube.getNome());
+        
+        // Calcula as estatísticas
+        for (PartidaEntity partida : partidas) {
+            boolean isMandante = partida.getClubeCasaId().equals(clubeId);
+            int golsFeitos = isMandante ? partida.getResultadoCasa() : partida.getResultadoVisitante();
+            int golsSofridos = isMandante ? partida.getResultadoVisitante() : partida.getResultadoCasa();
+            
+            retrospecto.setGolsFeitos(retrospecto.getGolsFeitos() + golsFeitos);
+            retrospecto.setGolsSofridos(retrospecto.getGolsSofridos() + golsSofridos);
+            
+            if (golsFeitos > golsSofridos) {
+                retrospecto.setVitorias(retrospecto.getVitorias() + 1);
+            } else if (golsFeitos == golsSofridos) {
+                retrospecto.setEmpates(retrospecto.getEmpates() + 1);
+            } else {
+                retrospecto.setDerrotas(retrospecto.getDerrotas() + 1);
+            }
+            
+            retrospecto.setTotalJogos(retrospecto.getTotalJogos() + 1);
+        }
+        
+        retrospecto.setSaldoGols(retrospecto.getGolsFeitos() - retrospecto.getGolsSofridos());
+        
+        return retrospecto;
+    }
 
+    /**
+     * Busca o retrospecto de um clube contra todos os seus adversários
+     * @param clubeId ID do clube para buscar o retrospecto
+     * @return Lista de DTOs com as estatísticas contra cada adversário
+     * @throws RegraDoNaoEncontradoExcecao404 se o clube não for encontrado
+     */
+    public List<RetrospectoAdversarioDTO> buscarRetrospectoContraAdversarios(Long clubeId) {
+        // Verifica se o clube existe
+        ClubeEntity clube = clubeRepository.findById(clubeId)
+            .orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube não encontrado com o ID: " + clubeId));
+        
+        // Busca todas as partidas do clube
+        LocalDateTime dataInicio = LocalDateTime.MIN;
+        LocalDateTime dataFim = LocalDateTime.MAX;
+        List<PartidaEntity> partidas = partidaRepository.buscarPartidasPorClube(clubeId, dataInicio, dataFim);
+        
+        // Mapa para armazenar o retrospecto contra cada adversário
+        Map<Long, RetrospectoAdversarioDTO> retrospectoPorAdversario = new HashMap<>();
+        
+        // Processa cada partida
+        for (PartidaEntity partida : partidas) {
+            // Determina o adversário
+            Long adversarioId = partida.getClubeCasaId().equals(clubeId) ? 
+                               partida.getClubeVisitanteId() : partida.getClubeCasaId();
+            
+            // Obtém ou cria o retrospecto para este adversário
+            RetrospectoAdversarioDTO retrospecto = retrospectoPorAdversario.computeIfAbsent(
+                adversarioId, 
+                id -> {
+                    RetrospectoAdversarioDTO novo = new RetrospectoAdversarioDTO();
+                    novo.setAdversarioId(id);
+                    // Busca o nome do adversário
+                    String nomeAdversario = clubeRepository.findById(id)
+                        .map(ClubeEntity::getNome)
+                        .orElse("Clube Desconhecido");
+                    novo.setAdversarioNome(nomeAdversario);
+                    return novo;
+                }
+            );
+            
+            // Atualiza as estatísticas
+            boolean isMandante = partida.getClubeCasaId().equals(clubeId);
+            int golsFeitos = isMandante ? partida.getResultadoCasa() : partida.getResultadoVisitante();
+            int golsSofridos = isMandante ? partida.getResultadoVisitante() : partida.getResultadoCasa();
+            
+            retrospecto.setTotalJogos(retrospecto.getTotalJogos() + 1);
+            retrospecto.setGolsFeitos(retrospecto.getGolsFeitos() + golsFeitos);
+            retrospecto.setGolsSofridos(retrospecto.getGolsSofridos() + golsSofridos);
+            retrospecto.setSaldoGols(retrospecto.getGolsFeitos() - retrospecto.getGolsSofridos());
+            
+            if (golsFeitos > golsSofridos) {
+                retrospecto.setVitorias(retrospecto.getVitorias() + 1);
+            } else if (golsFeitos == golsSofridos) {
+                retrospecto.setEmpates(retrospecto.getEmpates() + 1);
+            } else {
+                retrospecto.setDerrotas(retrospecto.getDerrotas() + 1);
+            }
+        }
+        
+        // Retorna a lista de retrospectos ordenada pelo nome do adversário
+        return new ArrayList<>(retrospectoPorAdversario.values()).stream()
+            .sorted(Comparator.comparing(RetrospectoAdversarioDTO::getAdversarioNome))
+            .collect(Collectors.toList());
+    }
+    
+     //Busca o histórico de confrontos diretos entre dois clubes
+     //@param clube1Id ID do primeiro clube
+     //@param clube2Id ID do segundo clube
+     //@return DTO com estatísticas e lista de partidas
+     //@throws RegraDoNaoEncontradoExcecao404 se algum dos clubes não for encontrado
+    public ConfrontoDiretoDTO buscarConfrontoDireto(Long clube1Id, Long clube2Id) {
+        // Verifica se os clubes existem
+        ClubeEntity clube1 = clubeRepository.findById(clube1Id)
+            .orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube não encontrado com o ID: " + clube1Id));
+        
+        ClubeEntity clube2 = clubeRepository.findById(clube2Id)
+            .orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube não encontrado com o ID: " + clube2Id));
+
+        // Busca todas as partidas entre os dois clubes
+        List<PartidaEntity> partidas = partidaRepository.findConfrontosDiretos(clube1Id, clube2Id);
+
+        // Cria o DTO de resposta
+        ConfrontoDiretoDTO confronto = new ConfrontoDiretoDTO();
+        confronto.setClube1Id(clube1.getId());
+        confronto.setClube1Nome(clube1.getNome());
+        confronto.setClube2Id(clube2.getId());
+        confronto.setClube2Nome(clube2.getNome());
+        confronto.setPartidas(partidas);
+
+        // Calcula as estatísticas
+        for (PartidaEntity partida : partidas) {
+            boolean clube1Mandante = partida.getClubeCasaId().equals(clube1Id);
+            
+            int golsClube1 = clube1Mandante ? partida.getResultadoCasa() : partida.getResultadoVisitante();
+            int golsClube2 = clube1Mandante ? partida.getResultadoVisitante() : partida.getResultadoCasa();
+            
+            confronto.setGolsClube1(confronto.getGolsClube1() + golsClube1);
+            confronto.setGolsClube2(confronto.getGolsClube2() + golsClube2);
+            
+            if (golsClube1 > golsClube2) {
+                confronto.setVitoriasClube1(confronto.getVitoriasClube1() + 1);
+            } else if (golsClube2 > golsClube1) {
+                confronto.setVitoriasClube2(confronto.getVitoriasClube2() + 1);
+            } else {
+                confronto.setEmpates(confronto.getEmpates() + 1);
+            }
+        }
+        
+        confronto.setTotalJogos(partidas.size());
+        
+        return confronto;
+    }
+    
+     //Busca o ranking de clubes de acordo com o critério especificado
+     //@param tipo Tipo de ranking: 'pontos', 'gols', 'vitorias' ou 'jogos'
+     //@return Lista de DTOs com as estatísticas dos clubes ordenadas
+    public List<RankingClubeDTO> buscarRanking(String tipo) {
+        List<Object[]> estatisticas = partidaRepository.findEstatisticasClubes();
+        List<RankingClubeDTO> ranking = new ArrayList<>();
+        
+        // Converter os resultados da consulta para DTOs
+        for (Object[] estatistica : estatisticas) {
+            Long clubeId = (Long) estatistica[0];
+            String clubeNome = (String) estatistica[1];
+            Long totalJogos = (Long) estatistica[2];
+            Long vitorias = (Long) estatistica[3];
+            Long empates = (Long) estatistica[4];
+            Long derrotas = (Long) estatistica[5];
+            Long golsFeitos = estatistica[6] != null ? ((Number) estatistica[6]).longValue() : 0L;
+            Long golsSofridos = estatistica[7] != null ? ((Number) estatistica[7]).longValue() : 0L;
+            
+            int pontos = (vitorias.intValue() * 3) + empates.intValue();
+            int saldoGols = golsFeitos.intValue() - golsSofridos.intValue();
+            
+            RankingClubeDTO dto = new RankingClubeDTO();
+            dto.setId(clubeId);
+            dto.setNome(clubeNome);
+            dto.setJogos(totalJogos.intValue());
+            dto.setVitorias(vitorias.intValue());
+            dto.setEmpates(empates.intValue());
+            dto.setDerrotas(derrotas.intValue());
+            dto.setGolsFeitos(golsFeitos.intValue());
+            dto.setGolsSofridos(golsSofridos.intValue());
+            dto.setSaldoGols(saldoGols);
+            dto.setPontos(pontos);
+            
+            // Apenas adiciona se tiver jogos
+            if (totalJogos > 0) {
+                ranking.add(dto);
+            }
+        }
+        
+        // Ordenar de acordo com o tipo de ranking, basicamente vai organizar de acordo com pontos, gols, vitorias e gols
+        switch (tipo.toLowerCase()) {
+            case "pontos":
+                ranking.sort((a, b) -> {
+                    if (a.getPontos() != b.getPontos()) {
+                        return Integer.compare(b.getPontos(), a.getPontos());
+                    } else if (a.getVitorias() != b.getVitorias()) {
+                        return Integer.compare(b.getVitorias(), a.getVitorias());
+                    } else if (a.getSaldoGols() != b.getSaldoGols()) {
+                        return Integer.compare(b.getSaldoGols(), a.getSaldoGols());
+                    } else if (a.getGolsFeitos() != b.getGolsFeitos()) {
+                        return Integer.compare(b.getGolsFeitos(), a.getGolsFeitos());
+                    } else {
+                        return a.getNome().compareTo(b.getNome());
+                    }
+                });
+                break;
+                
+            case "gols":
+                ranking.sort((a, b) -> {
+                    if (a.getGolsFeitos() != b.getGolsFeitos()) {
+                        return Integer.compare(b.getGolsFeitos(), a.getGolsFeitos());
+                    }
+                    return a.getNome().compareTo(b.getNome());
+                });
+                break;
+                
+            case "vitorias":
+                ranking.sort((a, b) -> {
+                    if (a.getVitorias() != b.getVitorias()) {
+                        return Integer.compare(b.getVitorias(), a.getVitorias());
+                    } else if (a.getPontos() != b.getPontos()) {
+                        return Integer.compare(b.getPontos(), a.getPontos());
+                    } else if (a.getSaldoGols() != b.getSaldoGols()) {
+                        return Integer.compare(b.getSaldoGols(), a.getSaldoGols());
+                    } else {
+                        return a.getNome().compareTo(b.getNome());
+                    }
+                });
+                break;
+                
+            case "jogos":
+                ranking.sort((a, b) -> {
+                    if (a.getJogos() != b.getJogos()) {
+                        return Integer.compare(b.getJogos(), a.getJogos());
+                    } else {
+                        return a.getNome().compareTo(b.getNome());
+                    }
+                });
+                break;
+                
+            default:
+                throw new IllegalArgumentException("Tipo de ranking inválido. Use: pontos, gols, vitorias ou jogos");
+        }
+        
+        // Atribuir posições
+        for (int i = 0; i < ranking.size(); i++) {
+            ranking.get(i).setPosicao(i + 1);
+        }
+        
+        return ranking;
+    }
 }

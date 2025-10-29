@@ -2,6 +2,7 @@ package com.example.testeapifutebol.Controller;
 
 import com.example.testeapifutebol.DTO.EstadioDTO;
 import com.example.testeapifutebol.Service.EstadioService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,14 +21,14 @@ public class EstadioController {
     @Autowired
     private EstadioService estadioService ;
 
-    // POST /estadios - Criar novo estádio
+    //Cria novo estádio
     @PostMapping
-    public ResponseEntity<EstadioDTO> criarEstadio(@RequestBody EstadioDTO estadioDTO) {
+    public ResponseEntity<EstadioDTO> criarEstadio(@Valid @RequestBody EstadioDTO estadioDTO) {
         // Chama Service para cadastrar estádio no banco
         EstadioDTO estadioCriado = estadioService.cadastrarEstadio(estadioDTO);
         return new ResponseEntity<>(estadioCriado, HttpStatus.CREATED); // 201 - Criado com sucesso
     }
-    // PUT /estadios/{id} - Atualizar estádio existente
+    //Atualiza estádio existente
     @PutMapping("/{id}")
     public ResponseEntity<EstadioDTO> updateEstadio(@PathVariable Long id, @RequestBody EstadioDTO estadioDTO) {
         // Chama Service para atualizar estádio no banco
@@ -39,7 +40,7 @@ public class EstadioController {
 
         return new ResponseEntity<>(estadioAtualizado, HttpStatus.OK); // 200 - Atualizado com sucesso
     }
-    // DELETE /estadios/{id} - Remover estádio (hard delete)
+    //Remove estádio (hard delete)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarEstadio(@PathVariable Long id) {
         // Chama Service para deletar estádio do banco
@@ -52,7 +53,7 @@ public class EstadioController {
         }
     }
 
-    // GET /estadios/{id} - Buscar estádio específico por ID
+    //Busca estádio específico por ID
     @GetMapping("/{id}")
     public ResponseEntity<EstadioDTO> buscarEstadioPorId(@PathVariable Long id) {
         // Chama Service para buscar estádio no banco
@@ -64,7 +65,7 @@ public class EstadioController {
         return new ResponseEntity<>(estadioEncontrado, HttpStatus.OK); // 200 - Encontrado com sucesso
     }
 
-    // GET /estadios - Listar todos os estádios com paginação
+    //Lista todos os estádios com paginação
     @GetMapping
     public ResponseEntity<Page<EstadioDTO>> listarEstadios(
             // PARÂMETROS DE PAGINAÇÃO E ORDENAÇÃO
@@ -73,14 +74,14 @@ public class EstadioController {
             @RequestParam(defaultValue = "nome") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
-        // Configura direção da ordenação (asc ou desc)
+        //Configura direção da ordenação (asc ou desc)
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? 
             Sort.Direction.DESC : Sort.Direction.ASC;
         
-        // Cria configuração de paginação e ordenação
+        //Cria configuração de paginação e ordenação
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
-        // Busca estádios aplicando paginação e ordenação
+        //Busca estádios aplicando paginação e ordenação
         Page<EstadioDTO> estadiosEncontrados = estadioService.findAllEstadios(pageable);
         
         return new ResponseEntity<>(estadiosEncontrados, HttpStatus.OK); // 200

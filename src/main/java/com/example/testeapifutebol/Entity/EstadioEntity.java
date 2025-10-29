@@ -2,24 +2,20 @@ package com.example.testeapifutebol.Entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
+
 
 
 @Entity // Marca como entidade JPA (tabela do banco)
 @Table(name = "estadio") // Nome da tabela no banco: "estadio"
 @Data // Lombok: gera getters, setters, toString, equals, hashCode automaticamente
-//@Getter
-//@Setter
-//@NoArgsConstructor
-//@AllArgsConstructor
-//@Builder
+
 
 public class EstadioEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) //auto incremento
     private Long id;
 
-    // Nome do estádio (campo obrigatório)
+    //Nome do estádio
     @Column(nullable = false, unique = true) // NOT NULL + UNIQUE
     private String nome;
 
@@ -29,7 +25,7 @@ public class EstadioEntity {
         this.nome = nome;
     }
 
-    // Construtor vazio (obrigatório para JPA)
+    //Construtor vazio (obrigatório para JPA)
     public EstadioEntity() {
     }
 

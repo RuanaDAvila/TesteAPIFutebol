@@ -1,17 +1,22 @@
 package com.example.testeapifutebol.DTO;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 import java.time.LocalDateTime;
 @Data
 
 public class EstadioDTO {
     
-    // Nome do estádio (único campo necessário para criar/atualizar estádio)
+    //Validações de no minimo 3 letras e sem caracteres especiais no Estado
+    @NotBlank(message = "O nome do estádio é obrigatório")
+    @Size(min = 3, message = "O nome do estádio deve ter no mínimo 3 caracteres")
+    @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s]*$", message = "O nome do estádio deve conter apenas letras e espaços")
     private String nome;
 
-    // Construtor vazio (necessário para Jackson converter JSON → Java)
+    //Intellij me pediu um construtor vazio (necessário para Jackson converter JSON → Java)
     public EstadioDTO() {
-        // Construtor padrão - necessário para Jackson
     }
 
     // Construtor com parâmetros (para criar DTO com dados)

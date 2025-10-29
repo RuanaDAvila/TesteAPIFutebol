@@ -9,10 +9,8 @@ import java.time.LocalDate;
 @Table (name = "clube")
 @Data
 
-/**
- * Entidade que representa um Clube de futebol
- * Esta classe mapeia a tabela 'clube' no banco de dados MySQL
- */
+//Entidade mapeia a tabela 'clube' no banco de dados MySQL
+
     public class ClubeEntity {
     // ID único do clube (chave primária, gerada automaticamente)
     @Id

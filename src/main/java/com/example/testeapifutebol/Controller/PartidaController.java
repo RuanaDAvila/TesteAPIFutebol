@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
@@ -23,21 +24,21 @@ public class PartidaController {
     @Autowired
     private PartidaService partidaService;
 
-    // POST /partidas - Criar nova partida
+    //Cria nova partida
     @PostMapping
     public ResponseEntity<PartidaDTO> criarPartidaEntity(@RequestBody PartidaDTO partidaDTO) {
         PartidaDTO partidaCriada = partidaService.savePartidaEntity(partidaDTO);
         return new ResponseEntity<>(partidaCriada, HttpStatus.CREATED); // retorna 201
     }
 
-    // GET /partidas - Listar todas as partidas
+    //Lista todas as partidas
     @GetMapping
     public ResponseEntity<List<PartidaDTO>> findAllPartidaEntity() {
         List<PartidaDTO> partidas = partidaService.findAllPartidaEntity();
         return new ResponseEntity<>(partidas, HttpStatus.OK); // retorna 200
     }
 
-    // GET /partidas/buscar - Busca avançada com filtros, paginação e ordenação
+    //Busca avançada com filtros, paginação e ordenação
     @GetMapping("/buscar") // URL: /partidas/buscar
     public ResponseEntity<Page<PartidaDTO>> buscarPartidasComFiltros(
             // PARÂMETROS DE FILTRO (todos opcionais)
@@ -45,6 +46,10 @@ public class PartidaController {
             @RequestParam(required = false) Integer golsCasa,
             @RequestParam(required = false) Integer golsVisitante,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataHora,
+            @RequestParam(required = false) Boolean apenasGoleadas,
+            @RequestParam(required = false) Long clubeId,
+            @RequestParam(required = false) Boolean clubeCasa,
+            @RequestParam(required = false) Boolean clubeVisitante,
 
             // PARÂMETROS DE PAGINAÇÃO E ORDENAÇÃO
             @RequestParam(defaultValue = "0") int page,
@@ -52,55 +57,63 @@ public class PartidaController {
             @RequestParam(defaultValue = "dataHora") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
-        // Configura direção da ordenação (asc ou desc)
+        //Configura direção da ordenação (asc ou desc)
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? 
             Sort.Direction.DESC : Sort.Direction.ASC;
         
-        // Cria configuração de paginação e ordenação
+        //Cria configuração de paginação e ordenação
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
-        // Busca partidas aplicando filtros, paginação e ordenação
-        Page<PartidaDTO> partidasEncontradas = partidaService.findPartidasComFiltros(estadio, golsCasa, golsVisitante, dataHora, pageable);
+        //Busca partidas aplicando filtros, paginação e ordenação
+        Page<PartidaDTO> partidasEncontradas = partidaService.findPartidasComFiltros(
+            estadio, golsCasa, golsVisitante, dataHora, 
+            apenasGoleadas, clubeId, clubeCasa, clubeVisitante, pageable
+        );
         
         return new ResponseEntity<>(partidasEncontradas, HttpStatus.OK); // 200
     }
 
-    // GET /partidas/{id} - Buscar partida por ID
+    //Busca partida por ID
     @GetMapping("/{id}")
     public ResponseEntity<PartidaDTO> buscarPartidaPorId(@PathVariable Long id) {
         PartidaDTO partidaEncontrada = partidaService.findPartidaById(id);
-        
-        if (partidaEncontrada == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 - Partida não encontrada
-        } else {
-            return new ResponseEntity<>(partidaEncontrada, HttpStatus.OK); // 200 - Partida encontrada
-        }
+        return ResponseEntity.ok(partidaEncontrada); // 200 - Partida encontrada
     }
 
-    // PUT /partidas/{id} - Atualizar partida existente
+    //Atualiza partida existente
     @PutMapping("/{id}")
-    public ResponseEntity<PartidaDTO> updatePartida(@PathVariable Long id, @RequestBody PartidaDTO partidaDTO) {
+    public ResponseEntity<PartidaDTO> updatePartida(@PathVariable Long id, @Valid @RequestBody PartidaDTO partidaDTO) {
         PartidaDTO partidaAtualizada = partidaService.updatePartidaEntity(id, partidaDTO);
-
-        if (partidaAtualizada == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 - Partida não encontrada
-        }
-
-        return new ResponseEntity<>(partidaAtualizada, HttpStatus.OK); // 200 - Atualizada com sucesso
+        return ResponseEntity.ok(partidaAtualizada); // 200 - Atualizada com sucesso
     }
 
-    // DELETE /partidas/{id} - Deletar partida
+    //Deleta partida
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarPartida(@PathVariable Long id) {
-        boolean deletado = partidaService.deletePartidaEntity(id);
-        
-        if (deletado) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 - Deletado com sucesso
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 - Partida não encontrada
-        }
+        partidaService.deletePartidaEntity(id);
+        return ResponseEntity.noContent().build(); // 204 - Deletado com sucesso
     }
 
+    // GET /partidas/clube/{clubeId}/goleadas - Buscar goleadas de um clube
+    @GetMapping("/clube/{clubeId}/goleadas")
+    public ResponseEntity<List<PartidaDTO>> buscarGoleadasPorClube(@PathVariable Long clubeId) {
+        List<PartidaDTO> partidas = partidaService.findGoleadasByClube(clubeId);
+        return ResponseEntity.ok(partidas);
+    }
+    
+    // GET /partidas/clube/{clubeId}/filtros - Buscar partidas de um clube com filtros de clubeCasa/clubeVisitante
+    @GetMapping("/clube/{clubeId}/filtros")
+    public ResponseEntity<List<PartidaDTO>> buscarPartidasPorClubeComFiltros(
+            @PathVariable Long clubeId,
+            @RequestParam(required = false) Boolean clubeCasa,
+            @RequestParam(required = false) Boolean clubeVisitante) {
+        
+        List<PartidaDTO> partidas = partidaService.findPartidasByClubeComFiltros(
+            clubeId, clubeCasa, clubeVisitante
+        );
+        return ResponseEntity.ok(partidas);
+    }
+    
     // GET /partidas/clube/{clubeId} - Buscar partidas por clube em um período
     @GetMapping("/clube/{clubeId}")
     public ResponseEntity<List<PartidaDTO>> buscarPartidasPorClube(

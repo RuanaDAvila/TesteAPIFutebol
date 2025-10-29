@@ -3,6 +3,7 @@ package com.example.testeapifutebol.Service;
 import com.example.testeapifutebol.DTO.EstadioDTO;
 import com.example.testeapifutebol.Entity.EstadioEntity;
 import com.example.testeapifutebol.Excecao.RegraDeExcecao409;
+import com.example.testeapifutebol.Excecao.RegraDeInvalidosExcecao400;
 import com.example.testeapifutebol.Repository.EstadioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,15 +12,43 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor //Ele cria o construtor (só com os campos obrigatórios) automaticamente
 
 public class EstadioService {
     private final EstadioRepository estadioRepository;
 
 
+    // Valida os dados do estádio
+    private void validarDadosEstadio(EstadioDTO estadioDTO) {
+        // Valida se o nome não é nulo ou vazio
+        if (estadioDTO.getName() == null || estadioDTO.getName().trim().isEmpty()) {
+            throw new RegraDeInvalidosExcecao400("O nome do estádio é obrigatório");
+        }
+        
+        // Remove espaços extras e converte para minúsculas para validação
+        String nome = estadioDTO.getName().trim();
+        
+        // Verifica se contém apenas letras e espaços, para barrar caracteres especiais
+        if (!nome.matches("^[a-zA-ZÀ-ÿ\\s]+")) {
+            throw new RegraDeInvalidosExcecao400("O nome do estádio deve conter apenas letras e espaços");
+        }
+        
+        // Remove espaços para contar apenas as letras
+        String apenasLetras = nome.replaceAll("[^a-zA-ZÀ-ÿ]", "");
+        
+        // Valida se tem as 3 letras
+        if (apenasLetras.length() < 3) {
+            throw new RegraDeInvalidosExcecao400("O nome do estádio deve conter pelo menos 3 letras");
+        }
+        
+        // Atualiza o nome no DTO com o valor sem espaços extras
+        estadioDTO.setName(nome);
+    }
+
     // Cadastra novo estádio no banco de dados
     public EstadioDTO cadastrarEstadio(EstadioDTO estadioDTO) {
-        System.out.println("Recebido: " + estadioDTO.getName());
+        // Valida os dados do estádio
+        validarDadosEstadio(estadioDTO);
 
         //Verificar se estádio já existe (FAZ PARTE DAS MINHAS EXCECOES)
         if (estadioRepository.existsByNome(estadioDTO.getName())) {
@@ -36,11 +65,21 @@ public class EstadioService {
 
     // Atualiza estádio existente no banco de dados
     public EstadioDTO updateEstadioEntity(Long id, EstadioDTO estadioDTO) {
+        // Valida os dados do estádio
+        validarDadosEstadio(estadioDTO);
+        
         // Busca estádio existente no banco
         EstadioEntity estadioCriado = estadioRepository.findById(id).orElse(null);
         if (estadioCriado == null) return null; // Se não existe, retorna null (404)
+        
+        // Se o nome foi alterado, verifica se já existe outro estádio com o novo nome
+        if (!estadioCriado.getNome().equals(estadioDTO.getName()) && 
+            estadioRepository.existsByNome(estadioDTO.getName())) {
+            throw new RegraDeExcecao409("Já existe um estádio com o nome '" + estadioDTO.getName() + "'");
+        }
+        
         // Atualiza dados do estádio
-        estadioCriado.setNome(estadioDTO.getName()); // DTO.name → Entity.nome
+        estadioCriado.setNome(estadioDTO.getName().trim()); // DTO.name → Entity.nome
         estadioRepository.save(estadioCriado); // Salva alterações no banco
         return estadioDTO; // Retorna DTO atualizado para o Controller
 
@@ -48,18 +87,18 @@ public class EstadioService {
 
     // Remove estádio completamente do banco (HARD DELETE)
     public boolean deleteEstadioEntity(Long id) {
-        // 1. Buscar o estádio no banco de dados
+        //Buscar o estádio no banco de dados
         EstadioEntity estadioExistente = estadioRepository.findById(id).orElse(null);
 
-        // 2. Verificar se o estádio existe
+        //Verificar se o estádio existe
         if (estadioExistente == null) {
             return false; // Não encontrou - Controller retornará 404
         }
 
-        // 3. HARD DELETE - Apagar completamente do banco
+        //HARD DELETE,Apagar completamente do banco
         estadioRepository.delete(estadioExistente);
 
-        // 4. Retorna sucesso - Controller retornará 204
+        //Retorna sucesso,Controller retornará 204
         return true;
     }
 
@@ -68,7 +107,7 @@ public class EstadioService {
         // Busca estádio no banco pelo ID
         EstadioEntity estadioCriado = estadioRepository.findById(id).orElse(null);
         if (estadioCriado == null) return null; // Se não existe, retorna null (404)
-        // Converte Entity → DTO para retornar ao Controller
+        // Converte Entity para DTO, para retornar ao Controller
         EstadioDTO estadioDTO = new EstadioDTO();
         estadioDTO.setName(estadioCriado.getNome()); // Entity.nome → DTO.name
         return estadioDTO; // Retorna DTO com dados do estádio (200)
@@ -78,11 +117,11 @@ public class EstadioService {
     public Page<EstadioDTO> findAllEstadios(Pageable pageable) {
         // Busca estádios no banco com paginação
         Page<EstadioEntity> estadios = estadioRepository.findAll(pageable);
-        // Converte cada Entity → DTO usando método auxiliar
+        // Converte cada Entity para DTO usando metodo auxiliar
         return estadios.map(this::converterEntityParaDTO);
     }
 
-    // Método auxiliar: converte EstadioEntity → EstadioDTO (reutilizável)
+    //metodo auxiliar para converter EstadioEntity -> EstadioDTO
     private EstadioDTO converterEntityParaDTO(EstadioEntity estadioEntity) {
         EstadioDTO estadioDTO = new EstadioDTO();
         estadioDTO.setName(estadioEntity.getNome()); // Entity.nome → DTO.name

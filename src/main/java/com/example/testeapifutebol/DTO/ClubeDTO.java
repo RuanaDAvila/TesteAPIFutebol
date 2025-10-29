@@ -10,7 +10,7 @@ import lombok.Data;
 //API ↔ Cliente (Postman, frontend)
 
 public class ClubeDTO {
-    //para receber dados
+    //para receber os dados
     private Long id;
     private String nome;
     private String estado;

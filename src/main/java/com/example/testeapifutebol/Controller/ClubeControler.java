@@ -1,9 +1,16 @@
 package com.example.testeapifutebol.Controller;
 
 import com.example.testeapifutebol.DTO.ClubeDTO;
+import com.example.testeapifutebol.DTO.RankingClubeDTO;
+import com.example.testeapifutebol.DTO.RetrospectoAdversarioDTO;
+import com.example.testeapifutebol.DTO.RetrospectoClubeDTO;
+import com.example.testeapifutebol.DTO.ConfrontoDiretoDTO;
 import com.example.testeapifutebol.Service.ClubeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -22,53 +29,22 @@ public class ClubeControler {
     @Autowired
     private ClubeService clubeService;
 
-    // POST /clubes - Criar novo clube
+    //Criar novo clube
     @PostMapping
     public ResponseEntity<ClubeDTO> criarClubeEntity(@RequestBody ClubeDTO clubeDTO) {
         ClubeDTO clubeCriado = clubeService.saveClubeEntity(clubeDTO);
         return new ResponseEntity<>(clubeCriado, HttpStatus.CREATED); // me da o retorno 201
     }
 
-    // GET /clubes - Listar todos os clubes
+    //buscar/Listar todos os clubes
     @GetMapping
     public ResponseEntity<List<ClubeDTO>> findAllClubeEntity() {
         List<ClubeDTO> clubes = clubeService.findAllClubeEntity();
         return new ResponseEntity<>(clubes, HttpStatus.OK); // me da o retorno 200
     }
 
-    /**
-     * ENDPOINT GET AVANÇADO - LISTAR CLUBES COM FILTROS, PAGINAÇÃO E ORDENAÇÃO
-     * - Lista clubes com filtros opcionais (nome, estado, situação)
-     * - Permite paginação (dividir resultados em páginas)
-     * - Permite ordenação (ascendente/descendente por qualquer campo)
-     *
-     * FILTROS:
-     * - GET /clubes/buscar?nome=Flamengo          → Clubes com "Flamengo" no nome
-     * - GET /clubes/buscar?estado=RJ              → Clubes do Rio de Janeiro
-     * - GET /clubes/buscar?ativo=S                → Apenas clubes ativos
-     * - GET /clubes/buscar?datacriacao=2024-01-15 → Clubes criados em 15/01/2024
-     * - GET /clubes/buscar?nome=Fla&estado=RJ     → Clubes com "Fla" no nome E do RJ
-     * 
-     * PAGINAÇÃO:
-     * - GET /clubes/buscar?page=1&size=10         → Segunda página, 10 clubes por página
-     * - size: quantidade de itens por página
-     * 
-     * ORDENAÇÃO:
-     * - GET /clubes/buscar?sort=nome,asc          → Ordenar por nome A-Z
-     * - GET /clubes/buscar?sort=nome,desc         → Ordenar por nome Z-A
-     * - GET /clubes/buscar?sort=datacriacao,desc  → Ordenar por data (mais recente primeiro)
-     * - sortBy: campo para ordenar (nome, estado, datacriacao)
-     * - sortDir: ORDEM (asc ou desc)
-     * 
-     * COMBINAÇÕES:
-     * - GET /clubes/buscar?estado=RJ&ativo=S&datacriacao=2024-01-15&sort=nome,asc&page=0&size=5
-     *   → Clubes ativos do RJ criados em 15/01/2024, ordenados por nome A-Z, primeira página com 5 resultados
-     *
-     * RETORNOS:
-     * - 200 OK + lista de clubes (mesmo que vazia)
-     * - 404 not foud
-     */
-    @GetMapping("/buscar") // URL: /clubes/buscar
+
+    @GetMapping("/buscar")
     public ResponseEntity<Page<ClubeDTO>> buscarClubesComFiltros(
             @RequestParam(required = false) String nome,     // ?nome=Flamengo
             @RequestParam(required = false) String estado,   // ?estado=RJ
@@ -86,18 +62,50 @@ public class ClubeControler {
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? 
             Sort.Direction.DESC : Sort.Direction.ASC;
         
-        // Cria configuração de paginação e ordenação
         // Pageable é configurações de página, tamanho e ordenação
-        // É como dizer: "quero a página 2, com 5 itens, ordenados por nome A-Z"
+        //ex.:"quero a página 2, com 5 itens, ordenados por nome A-Z"
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
         // Busca clubes aplicando filtros, paginação e ordenação
-        // Passa todos os filtros e configurações para o Service fazer a busca
         Page<ClubeDTO> clubesEncontrados = clubeService.findClubesComFiltros(nome, estado, ativo, datacriacao, pageable);
         return new ResponseEntity<>(clubesEncontrados, HttpStatus.OK); // 200
     }
+    
+    //Busca o retrospecto completo de um clube
+    @GetMapping("/{id}/retrospecto")
+    public ResponseEntity<RetrospectoClubeDTO> buscarRetrospectoClube(@PathVariable Long id) {
+        // Chama o serviço para buscar o retrospecto
+        RetrospectoClubeDTO retrospecto = clubeService.buscarRetrospectoClube(id);
+        return new ResponseEntity<>(retrospecto, HttpStatus.OK);
+    }
+    
+    //Busca o retrospecto de um clube contra todos os seus adversários
+    @GetMapping("/{id}/retrospecto/adversarios")
+    public ResponseEntity<List<RetrospectoAdversarioDTO>> buscarRetrospectoContraAdversarios(@PathVariable Long id) {
+        List<RetrospectoAdversarioDTO> retrospecto = clubeService.buscarRetrospectoContraAdversarios(id);
+        return new ResponseEntity<>(retrospecto, HttpStatus.OK);
+    }
+    
+    // Busca o histórico de confrontos diretos entre dois clubes
+    @GetMapping("/{clube1Id}/confronto/{clube2Id}")
+    public ResponseEntity<ConfrontoDiretoDTO> buscarConfrontoDireto(
+            @PathVariable Long clube1Id,
+            @PathVariable Long clube2Id
+    ) {
+        ConfrontoDiretoDTO confronto = clubeService.buscarConfrontoDireto(clube1Id, clube2Id);
+        return new ResponseEntity<>(confronto, HttpStatus.OK);
+    }
+    
+    // Busca o ranking de clubes
+    @GetMapping("/ranking")
+    public ResponseEntity<List<RankingClubeDTO>> buscarRanking(
+            @RequestParam(defaultValue = "pontos") String tipo
+    ) {
+        List<RankingClubeDTO> ranking = clubeService.buscarRanking(tipo);
+        return new ResponseEntity<>(ranking, HttpStatus.OK);
+    }
 
-    // PUT /clubes/{id} - Atualizar clube existente
+    //Atualizar clube existente, usando o id
     @PutMapping("/{id}")
     public ResponseEntity<ClubeDTO> updateClube(@PathVariable Long id, @RequestBody ClubeDTO clubeDTO) {
         //chama o serviço para atualizar, esse servoço ja trata as exceções 400, 404 e 409
@@ -106,19 +114,14 @@ public class ClubeControler {
         return ResponseEntity.ok(clubeAtualizado);
     }
 
-    /**
-     * ENDPOINT GET POR ID - BUSCAR UM CLUBE ESPECÍFICO
-     * Busca clubes aplicando filtros, paginação e ordenação
-     * Retorna: 200 OK + dados do clube, ou 404 se não encontrar
-     */
+    //Busca clube por id
     @GetMapping("/{id}") // Diz ao Spring: "quando alguém fizer GET /clubes/1, execute este método"
     public ResponseEntity<ClubeDTO> buscarClubePorId(@PathVariable Long id) {
-        // @PathVariable pega o {id} da URL e coloca na variável "id"
 
-        // Chama o Service para buscar o clube específico no banco de dados
+        //Chama o Service para buscar o clube específico no banco de dados
         ClubeDTO clubeEncontrado = clubeService.findClubeById(id);
         
-        // Verifica se encontrou o clube
+        //Verifica se encontrou o clube
         if (clubeEncontrado == null) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND); // 404 - Clube não encontrado
         } else {
@@ -129,12 +132,10 @@ public class ClubeControler {
     //DELETE /clubes/{id} - Inativar clube (soft delete)
      //Não remove do banco, apenas muda status de "S" para "N"
     //Retorna: 204 No Content se sucesso, ou 404 se não encontrar
-    @DeleteMapping("/{id}") // Diz ao Spring: "quando alguém fizer DELETE /clubes/1, execute este método"
+    @DeleteMapping("/{id}") //quando alguém fizer DELETE/clubes/1, executa este método"
     public ResponseEntity<Void> inativarClube(@PathVariable Long id) {
-        // @PathVariable pega o {id} da URL e coloca na variável "id"
-        // Exemplo: se URL for /clubes/5, então id = 5
 
-        // Chama o Service para inativar o clube, retorno 404
+        //Chama o Service para inativar o clube, retorno 404
         boolean inativado = clubeService.inativarClubeEntity(id);
         
         // Verifica se conseguiu inativar o clube
