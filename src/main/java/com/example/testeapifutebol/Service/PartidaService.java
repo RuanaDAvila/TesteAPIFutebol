@@ -299,56 +299,49 @@ public class PartidaService {
 
         // Valida existência dos clubes
         if (!clubeRepository.existsById(partidaDTO.getClubeCasaId())) {
-            throw new RegraDeInvalidosExcecao400("Clube da casa não encontrado");
+            throw new RegraDeInvalidosExcecao400("Clube da casa inexistente");
         }
         
         if (!clubeRepository.existsById(partidaDTO.getClubeVisitanteId())) {
-            throw new RegraDeInvalidosExcecao400("Clube visitante não encontrado");
+            throw new RegraDeInvalidosExcecao400("Clube visitante inexistente");
         }
 
         // Valida existência do estádio
         if (!estadioRepository.existsByNome(partidaDTO.getEstadio())) {
-            throw new RegraDeInvalidosExcecao400("Estádio não encontrado");
+            throw new RegraDeInvalidosExcecao400("Estádio inexistente");
         }
 
         // Valida gols não negativos
         if (partidaDTO.getResultadoCasa() < 0 || partidaDTO.getResultadoVisitante() < 0) {
             throw new RegraDeInvalidosExcecao400("O número de gols não pode ser negativo");
         }
-        
-        // Valida data não futura
-        if (partidaDTO.getDataHora().isAfter(LocalDateTime.now())) {
-            throw new RegraDeInvalidosExcecao400("A data da partida não pode ser futura");
-        }
     }
 
     //Valida a data da partida em relação à data de criação dos clubes
     private void validarDataPartida(LocalDateTime dataHora, ClubeEntity clubeCasa, ClubeEntity clubeVisitante) {
-        LocalDateTime agora = LocalDateTime.now();
-        
-        // Valida se a data é futura
-        if (dataHora.isBefore(agora)) {
-            throw new RegraDeExcecao409("A data da partida deve ser futura");
-        }
-
         // Valida se a data é posterior à criação dos clubes
         if (dataHora.toLocalDate().isBefore(clubeCasa.getDataCriacao())) {
-            throw new RegraDeExcecao409("A data da partida é anterior à data de criação do clube da casa (" + clubeCasa.getNome() + ")");
+            throw new RegraDeExcecao409("A data da partida é anterior à data de criação do clube da casa, (" + clubeCasa.getNome() + ")");
         }
         
         if (dataHora.toLocalDate().isBefore(clubeVisitante.getDataCriacao())) {
-            throw new RegraDeExcecao409("A data da partida é anterior à data de criação do clube visitante (" + clubeVisitante.getNome() + ")");
+            throw new RegraDeExcecao409("A data da partida é anterior à data de criação do clube visitante, (" + clubeVisitante.getNome() + ")");
+        }
+
+        // Valida data deve ser futura (após validar criação dos clubes)
+        if (dataHora.isBefore(LocalDateTime.now())) {
+            throw new RegraDeInvalidosExcecao400("A data da partida deve ser futura");
         }
     }
 
     //Valida o status dos clubes (devem estar ativos)
     private void validarStatusDosClubes(ClubeEntity clubeCasa, ClubeEntity clubeVisitante) {
         if ("N".equalsIgnoreCase(clubeCasa.getAtivo())) {
-            throw new RegraDeExcecao409("O clube da casa " + clubeCasa.getNome() + " está inativo");
+            throw new RegraDeExcecao409("O clube da casa, " + clubeCasa.getNome() + ", está inativo");
         }
         
         if ("N".equalsIgnoreCase(clubeVisitante.getAtivo())) {
-            throw new RegraDeExcecao409("O clube visitante " + clubeVisitante.getNome() + " está inativo");
+            throw new RegraDeExcecao409("O clube visitante, " + clubeVisitante.getNome() + ", está inativo");
         }
     }
 
@@ -371,7 +364,7 @@ public class PartidaService {
         partidasProximasCasa.removeIf(p -> p.getId().equals(idPartidaAtual));
         
         if (!partidasProximasCasa.isEmpty()) {
-            throw new RegraDeExcecao409("O clube da casa já tem uma partida agendada próxima a esta data");
+            throw new RegraDeExcecao409("O clube da casa já tem uma partida agendada com menos de 48h desta data");
         }
         
         // Verifica para o clube visitante

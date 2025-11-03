@@ -55,8 +55,41 @@ public class ClubeService {
         this.clubeRepository = clubeRepository;
         this.partidaRepository = partidaRepository;
     }
-
+    // Salva um clube no banco de dados
     public ClubeEntity salvarClube(ClubeEntity clube) {
+        // Validar nome nulo
+        if (clube.getNome() == null || clube.getNome().trim().isEmpty()) {
+            throw new RegraDeInvalidosExcecao400("Nome é obrigatório");
+        }
+
+        // Validar tamanho mínimo do nome
+        if (clube.getNome().trim().length() < 2) {
+            throw new RegraDeInvalidosExcecao400("Nome deve ter pelo menos 2 caracteres");
+        }
+
+        // Validar estado
+        if (clube.getEstado() == null || clube.getEstado().trim().isEmpty()) {
+            throw new RegraDeInvalidosExcecao400("Estado é obrigatório");
+        }
+
+        // Validar se estado existe no Brasil
+        if (!UFS_BR.contains(clube.getEstado().trim().toUpperCase())) {
+            throw new RegraDeInvalidosExcecao400("Estado inválido: " + clube.getEstado());
+        }
+
+        // Validar data de criação
+        if (clube.getDataCriacao() == null) {
+            throw new RegraDeInvalidosExcecao400("Data de criação é obrigatória");
+        }
+
+        // Validar se data não é no futuro
+        if (clube.getDataCriacao().isAfter(LocalDate.now())) {
+            throw new RegraDeInvalidosExcecao400("Data de criação não pode ser futura");
+        }
+
+        // Depois das validações, verificar duplicidade
+        if (clubeRepository.existsByNomeAndEstado(clube.getNome(), clube.getEstado())) {
+        }
         //chama o metodo de verificacao no repository
         if (clubeRepository.existsByNomeAndEstado(clube.getNome(), clube.getEstado())) {
 

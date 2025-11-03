@@ -29,11 +29,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(RegraDoNaoEncontradoExcecao404.class)
-    public ResponseEntity<Map<String, String>> handleNaoEncontrado404(RegraDoNaoEncontradoExcecao404 ex) {
-        Map<String, String> errorResponse = new HashMap<>();
-        errorResponse.put("message", ex.getMessage());
-        errorResponse.put("status", HttpStatus.NOT_FOUND.toString());
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    public ResponseEntity<String> handleNaoEncontrado404(RegraDoNaoEncontradoExcecao404 ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 
 }

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Repository;
 public interface ClubeRepository extends JpaRepository<ClubeEntity, Long> {
 
     /**
-     * MÉTODO ÚNICO COM @Query
+     *metodo unico com @Query
      * Como funciona:
      * - (:nome IS NULL OR ...) = se nome for null, ignora o filtro
      * - UPPER(c.nome) LIKE UPPER(CONCAT('%', :nome, '%')) = busca case insensitive

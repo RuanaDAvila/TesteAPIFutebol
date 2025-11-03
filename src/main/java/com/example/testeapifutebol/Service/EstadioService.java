@@ -30,7 +30,7 @@ public class EstadioService {
         
         // Verifica se contém apenas letras e espaços, para barrar caracteres especiais
         if (!nome.matches("^[a-zA-ZÀ-ÿ\\s]+")) {
-            throw new RegraDeInvalidosExcecao400("O nome do estádio deve conter apenas letras e espaços");
+            throw new RegraDeInvalidosExcecao400("O nome do estádio deve ter apenas letras e espaços");
         }
         
         // Remove espaços para contar apenas as letras
@@ -38,7 +38,7 @@ public class EstadioService {
         
         // Valida se tem as 3 letras
         if (apenasLetras.length() < 3) {
-            throw new RegraDeInvalidosExcecao400("O nome do estádio deve conter pelo menos 3 letras");
+            throw new RegraDeInvalidosExcecao400("O nome do estádio deve ter ao menos 3 letras");
         }
         
         // Atualiza o nome no DTO com o valor sem espaços extras
@@ -94,12 +94,8 @@ public class EstadioService {
         if (estadioExistente == null) {
             return false; // Não encontrou - Controller retornará 404
         }
-
-        //HARD DELETE,Apagar completamente do banco
-        estadioRepository.delete(estadioExistente);
-
-        //Retorna sucesso,Controller retornará 204
-        return true;
+        estadioRepository.delete(estadioExistente); //HARD DELETE,Apaga completamente do banco
+        return true;//Retorna sucesso,Controller retornará 204
     }
 
     // Busca estádio específico por ID no banco de dados
