@@ -1,6 +1,5 @@
 package com.example.testeapifutebol.Controller;
 
-import com.example.testeapifutebol.Controller.EstadioController;
 import com.example.testeapifutebol.DTO.EstadioDTO;
 import com.example.testeapifutebol.Service.EstadioService;
 import com.fasterxml.jackson.databind.ObjectMapper;

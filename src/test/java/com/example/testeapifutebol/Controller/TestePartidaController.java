@@ -1,5 +1,6 @@
 package com.example.testeapifutebol.Controller;
 
+import com.example.testeapifutebol.Controller.PartidaController;
 import com.example.testeapifutebol.DTO.PartidaDTO;
 import com.example.testeapifutebol.Service.PartidaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -177,7 +178,7 @@ public class TestePartidaController {
         when(partidaService.findPartidasByClubeComFiltros(eq(clubeId), any(), any())).thenReturn(partidas);
 
         //ACT & ASSERT
-        mockMvc.perform(get("/partidas/clube/{clubeId}", clubeId))
+        mockMvc.perform(get("/partidas/clube/{clubeId}/filtros", clubeId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -200,7 +201,7 @@ public class TestePartidaController {
         when(partidaService.findGoleadasByClube(clubeId)).thenReturn(partidas);
 
         //ACT & ASSERT
-        mockMvc.perform(get("/partidas/goleadas/{clubeId}", clubeId))
+        mockMvc.perform(get("/partidas/clube/{clubeId}/goleadas", clubeId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(1))

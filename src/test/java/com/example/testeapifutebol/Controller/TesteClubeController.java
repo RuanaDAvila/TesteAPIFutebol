@@ -1,5 +1,6 @@
 package com.example.testeapifutebol.Controller;
 
+import com.example.testeapifutebol.Controller.ClubeControler;
 import com.example.testeapifutebol.DTO.ClubeDTO;
 import com.example.testeapifutebol.Service.ClubeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +23,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ClubeController.class)
+@WebMvcTest(ClubeControler.class)
 public class TesteClubeController {
     
     @Autowired

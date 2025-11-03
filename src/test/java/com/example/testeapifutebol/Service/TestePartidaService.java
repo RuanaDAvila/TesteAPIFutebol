@@ -124,7 +124,6 @@ public class TestePartidaService {
         partidaDTO.setDataHora(LocalDateTime.now().plusDays(1));
 
         when(clubeRepository.existsById(999L)).thenReturn(false);
-        when(clubeRepository.existsById(2L)).thenReturn(true);
 
         //ACT & ASSERT
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {

@@ -176,8 +176,14 @@ public class TesteClubeService {
         when(clubeRepository.existsByNomeAndEstadoAndIdNot("Flamengo Atualizado", "RJ", clubeId)).thenReturn(false);
         when(clubeRepository.save(clubeExistente)).thenReturn(clubeExistente);
 
+        ClubeDTO clubeDTO = new ClubeDTO();
+        clubeDTO.setNome("Flamengo Atualizado");
+        clubeDTO.setEstado("RJ");
+        clubeDTO.setDatacriacao("2023-01-01");
+        clubeDTO.setAtivo("S");
+
         //ACT ,executar o metodo e captura a excecao
-        ClubeDTO resultado = clubeService.updateClubeEntity(clubeId, new ClubeDTO());
+        ClubeDTO resultado = clubeService.updateClubeEntity(clubeId, clubeDTO);
 
         //ASSERT, verificar o resultado da exceção
         assertNotNull(resultado);
@@ -200,7 +206,7 @@ public class TesteClubeService {
         });
 
         //ASSERT, verificar o resultado da exceção
-        assertEquals("Clube não encontrado com ID: " + clubeId, excecao.getMessage());
+        assertEquals("Clube com ID " + clubeId + " não foi encontrado", excecao.getMessage());
     }
 
     @Test
@@ -217,9 +223,15 @@ public class TesteClubeService {
         when(clubeRepository.findById(clubeId)).thenReturn(Optional.of(clubeExistente));
         when(clubeRepository.existsByNomeAndEstadoAndIdNot("Vasco", "RJ", clubeId)).thenReturn(true);
 
+        ClubeDTO clubeDTO = new ClubeDTO();
+        clubeDTO.setNome("Vasco");
+        clubeDTO.setEstado("RJ");
+        clubeDTO.setDatacriacao("2023-01-01");
+        clubeDTO.setAtivo("S");
+
         //ACT ,executar o metodo e captura a excecao
         RegraDeExcecao409 excecao = assertThrows(RegraDeExcecao409.class, () -> {
-            clubeService.updateClubeEntity(clubeId, new ClubeDTO());
+            clubeService.updateClubeEntity(clubeId, clubeDTO);
         });
 
         //ASSERT, verificar o resultado da exceção
@@ -233,6 +245,9 @@ public class TesteClubeService {
         ClubeEntity clube = new ClubeEntity();
         clube.setId(clubeId);
         clube.setNome("Flamengo");
+        clube.setEstado("RJ");
+        clube.setDataCriacao(LocalDate.now());
+        clube.setAtivo("S");
 
         when(clubeRepository.findById(clubeId)).thenReturn(Optional.of(clube));
 
@@ -257,7 +272,7 @@ public class TesteClubeService {
         });
 
         //ASSERT, verificar o resultado da exceção
-        assertEquals("Clube não encontrado com ID: " + clubeId, excecao.getMessage());
+        assertEquals("Clube com ID " + clubeId + " não foi encontrado", excecao.getMessage());
     }
 
     @Test
@@ -289,15 +304,25 @@ public class TesteClubeService {
         });
 
         //ASSERT, verificar o resultado da exceção
-        assertEquals("Clube não encontrado com ID: " + clubeId, excecao.getMessage());
+        assertEquals("Clube com ID " + clubeId + " não foi encontrado", excecao.getMessage());
     }
 
     @Test
     void testeListarClubes_Sucesso() {
         //ARRANGE, preparar dados
-        List<ClubeEntity> clubes = Arrays.asList(
-            new ClubeEntity(), new ClubeEntity()
-        );
+        ClubeEntity clube1 = new ClubeEntity();
+        clube1.setNome("Flamengo");
+        clube1.setEstado("RJ");
+        clube1.setDataCriacao(LocalDate.now());
+        clube1.setAtivo("S");
+        
+        ClubeEntity clube2 = new ClubeEntity();
+        clube2.setNome("Vasco");
+        clube2.setEstado("RJ");
+        clube2.setDataCriacao(LocalDate.now());
+        clube2.setAtivo("S");
+        
+        List<ClubeEntity> clubes = Arrays.asList(clube1, clube2);
         when(clubeRepository.findAll()).thenReturn(clubes);
 
         //ACT ,xecutar o metodo
