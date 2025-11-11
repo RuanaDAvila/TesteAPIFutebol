@@ -336,10 +336,7 @@ public class ClubeService {
             .orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube não encontrado com o ID: " + clubeId));
         
         // Busca todas as partidas do clube (como mandante ou visitante)
-        // Usando datas extremas para buscar todas as partidas
-        LocalDateTime dataInicio = LocalDateTime.MIN;
-        LocalDateTime dataFim = LocalDateTime.MAX;
-        List<PartidaEntity> partidas = partidaRepository.buscarPartidasPorClube(clubeId, dataInicio, dataFim);
+        List<PartidaEntity> partidas = partidaRepository.findByClubeMandanteIdOrClubeVisitanteId(clubeId);
         
         // Cria o DTO de retorno
         RetrospectoClubeDTO retrospecto = new RetrospectoClubeDTO();
@@ -383,9 +380,7 @@ public class ClubeService {
             .orElseThrow(() -> new RegraDoNaoEncontradoExcecao404("Clube não encontrado com o ID: " + clubeId));
         
         // Busca todas as partidas do clube
-        LocalDateTime dataInicio = LocalDateTime.MIN;
-        LocalDateTime dataFim = LocalDateTime.MAX;
-        List<PartidaEntity> partidas = partidaRepository.buscarPartidasPorClube(clubeId, dataInicio, dataFim);
+        List<PartidaEntity> partidas = partidaRepository.findByClubeMandanteIdOrClubeVisitanteId(clubeId);
         
         // Mapa para armazenar o retrospecto contra cada adversário
         Map<Long, RetrospectoAdversarioDTO> retrospectoPorAdversario = new HashMap<>();

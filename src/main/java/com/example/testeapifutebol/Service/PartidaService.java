@@ -59,8 +59,6 @@ public class PartidaService {
         // Converte DTO → Entity
         PartidaEntity partidaParaSalvar = new PartidaEntity();
 
-
-        
         // Copia dados do DTO para a Entity (todos os campos obrigatórios)
         partidaParaSalvar.setClubeCasaId(partidaDTO.getClubeCasaId());
         partidaParaSalvar.setClubeVisitanteId(partidaDTO.getClubeVisitanteId());
@@ -268,7 +266,6 @@ public class PartidaService {
     //Valida os dados básicos da partida
     //@param partidaDTO DTO com os dados da partida
      //@throws RegraDeInvalidosExcecao400 Se os dados forem inválidos
-
     private void validarDadosBasicos(PartidaDTO partidaDTO) {
         // Valida campos obrigatórios
         if (partidaDTO.getClubeCasaId() == null) {

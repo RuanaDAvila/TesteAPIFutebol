@@ -32,7 +32,7 @@ public interface ClubeRepository extends JpaRepository<ClubeEntity, Long> {
            //FILTRO NOME: Se null ignora, se não busca parcial (ex: "fla" encontra "Flamengo")
            //UPPER() = converte para maiúscula tanto o nome do banco quanto o parâmetro (busca case-insensitive)
            //CONCAT('%', :nome, '%') = adiciona % antes e depois (ex: "fla" vira "%fla%")
-           //LIKE = busca parcial (ex: "%FLA%" encontra "FLAMENGO", "FLUMINENSE")
+           //LIKE = busca parcial (ex: "%FLA%" encontra "FLAMENGO")
            "AND (:nome IS NULL OR UPPER(c.nome) LIKE UPPER(CONCAT('%', :nome, '%'))) " +
            //FILTRO ESTADO: Se null ignora, se não busca exato (ex: "RJ")
            "AND (:estado IS NULL OR c.estado = :estado) " +
@@ -54,16 +54,11 @@ public interface ClubeRepository extends JpaRepository<ClubeEntity, Long> {
         Pageable pageable
     );
 
-
-
     //metodo wue o spring data jpa implementa automaticamente, verifica se nome e estado ja existem
     boolean existsByNomeAndEstado(String nome, String estado);
 
     // Verifica se já existe um clube com o mesmo nome e estado, excluindo o clube com o ID especificado
     boolean existsByNomeAndEstadoAndIdNot(String nome, String estado, Long id);
-
-    
-
 
 
 }

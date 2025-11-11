@@ -74,7 +74,7 @@ public class TesteClubeService {
         //Configurar mock para simular clube já existente
         when(clubeRepository.existsByNomeAndEstado("Flamengo", "RJ")).thenReturn(true);
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         RegraDeExcecao409 excecao409 = assertThrows(RegraDeExcecao409.class, () -> {
             clubeService.salvarClube(clube);
         });
@@ -93,7 +93,7 @@ public class TesteClubeService {
         clube.setDataCriacao(LocalDate.now());
         clube.setAtivo("S");
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         RegraDeInvalidosExcecao400 excecao400 = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             clubeService.salvarClube(clube);
         });
@@ -111,7 +111,7 @@ public class TesteClubeService {
         clube.setDataCriacao(LocalDate.now());
         clube.setAtivo("S");
 
-        //ACT - executar o metodo
+        //ACT, executar o metodo
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             clubeService.salvarClube(clube);
         });
@@ -129,7 +129,7 @@ public class TesteClubeService {
         clube.setDataCriacao(LocalDate.now().plusDays(1)); // Data futura
         clube.setAtivo("S");
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             clubeService.salvarClube(clube);
         });
@@ -147,12 +147,12 @@ public class TesteClubeService {
         clube.setDataCriacao(LocalDate.now());
         clube.setAtivo("S");
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             clubeService.salvarClube(clube);
         });
 
-        //ASSERT, verificar o resultado da exceção
+        //ASSERT, verificar o resultado
         assertEquals("Nome é obrigatório", excecao.getMessage());
     }
 
@@ -182,10 +182,10 @@ public class TesteClubeService {
         clubeDTO.setDatacriacao("2023-01-01");
         clubeDTO.setAtivo("S");
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         ClubeDTO resultado = clubeService.updateClubeEntity(clubeId, clubeDTO);
 
-        //ASSERT, verificar o resultado da exceção
+        //ASSERT, verificar o resultado
         assertNotNull(resultado);
         assertEquals("Flamengo Atualizado", resultado.getNome());
     }
@@ -200,12 +200,12 @@ public class TesteClubeService {
 
         when(clubeRepository.findById(clubeId)).thenReturn(Optional.empty());
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         RegraDoNaoEncontradoExcecao404 excecao = assertThrows(RegraDoNaoEncontradoExcecao404.class, () -> {
             clubeService.updateClubeEntity(clubeId, new ClubeDTO());
         });
 
-        //ASSERT, verificar o resultado da exceção
+        //ASSERT, verificar o resultado
         assertEquals("Clube com ID " + clubeId + " não foi encontrado", excecao.getMessage());
     }
 
@@ -229,12 +229,12 @@ public class TesteClubeService {
         clubeDTO.setDatacriacao("2023-01-01");
         clubeDTO.setAtivo("S");
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         RegraDeExcecao409 excecao = assertThrows(RegraDeExcecao409.class, () -> {
             clubeService.updateClubeEntity(clubeId, clubeDTO);
         });
 
-        //ASSERT, verificar o resultado da exceção
+        //ASSERT, verificar o resultado
         assertEquals("Já existe um clube com o nome 'Vasco' no estado 'RJ'", excecao.getMessage());
     }
 
@@ -251,10 +251,10 @@ public class TesteClubeService {
 
         when(clubeRepository.findById(clubeId)).thenReturn(Optional.of(clube));
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         ClubeDTO resultado = clubeService.findClubeById(clubeId);
 
-        //ASSERT, verificar o resultado da exceção
+        //ASSERT, verificar o resultado
         assertNotNull(resultado);
         assertEquals(clubeId, resultado.getId());
         assertEquals("Flamengo", resultado.getNome());
@@ -266,12 +266,12 @@ public class TesteClubeService {
         Long clubeId = 999L;
         when(clubeRepository.findById(clubeId)).thenReturn(Optional.empty());
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         RegraDoNaoEncontradoExcecao404 excecao = assertThrows(RegraDoNaoEncontradoExcecao404.class, () -> {
             clubeService.findClubeById(clubeId);
         });
 
-        //ASSERT, verificar o resultado da exceção
+        //ASSERT, verificar o resultado
         assertEquals("Clube com ID " + clubeId + " não foi encontrado", excecao.getMessage());
     }
 
@@ -298,12 +298,12 @@ public class TesteClubeService {
         Long clubeId = 999L;
         when(clubeRepository.findById(clubeId)).thenReturn(Optional.empty());
 
-        //ACT ,executar o metodo e captura a excecao
+        //ACT, executar o metodo
         RegraDoNaoEncontradoExcecao404 excecao = assertThrows(RegraDoNaoEncontradoExcecao404.class, () -> {
             clubeService.inativarClubeEntity(clubeId);
         });
 
-        //ASSERT, verificar o resultado da exceção
+        //ASSERT, verificar o resultado
         assertEquals("Clube com ID " + clubeId + " não foi encontrado", excecao.getMessage());
     }
 
@@ -325,7 +325,7 @@ public class TesteClubeService {
         List<ClubeEntity> clubes = Arrays.asList(clube1, clube2);
         when(clubeRepository.findAll()).thenReturn(clubes);
 
-        //ACT ,xecutar o metodo
+        //ACT, executar o metodo
         List<ClubeDTO> resultado = clubeService.findAllClubeEntity();
 
         //ASSERT, verificar o resultado

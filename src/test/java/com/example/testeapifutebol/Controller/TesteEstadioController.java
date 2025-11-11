@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +28,7 @@ public class TesteEstadioController {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private EstadioService estadioService;
 
     @Autowired
@@ -42,11 +42,13 @@ public class TesteEstadioController {
 
         when(estadioService.cadastrarEstadio(any(EstadioDTO.class))).thenReturn(estadioDTO);
 
-        //ACT & ASSERT
-        mockMvc.perform(post("/estadios")
+        //ACT
+        var resultado = mockMvc.perform(post("/estadios")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(estadioDTO)))
-                .andExpect(status().isCreated())
+                .content(objectMapper.writeValueAsString(estadioDTO)));
+
+        //ASSERT
+        resultado.andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Maracanã"));
     }
 
@@ -59,11 +61,13 @@ public class TesteEstadioController {
 
         when(estadioService.updateEstadioEntity(eq(estadioId), any(EstadioDTO.class))).thenReturn(estadioDTO);
 
-        //ACT & ASSERT
-        mockMvc.perform(put("/estadios/{id}", estadioId)
+        //ACT
+        var resultado = mockMvc.perform(put("/estadios/{id}", estadioId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(estadioDTO)))
-                .andExpect(status().isOk())
+                .content(objectMapper.writeValueAsString(estadioDTO)));
+
+        //ASSERT
+        resultado.andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Maracanã Atualizado"));
     }
 
@@ -76,11 +80,13 @@ public class TesteEstadioController {
 
         when(estadioService.updateEstadioEntity(eq(estadioId), any(EstadioDTO.class))).thenReturn(null);
 
-        //ACT & ASSERT
-        mockMvc.perform(put("/estadios/{id}", estadioId)
+        //ACT
+        var resultado = mockMvc.perform(put("/estadios/{id}", estadioId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(estadioDTO)))
-                .andExpect(status().isNotFound());
+                .content(objectMapper.writeValueAsString(estadioDTO)));
+
+        //ASSERT
+        resultado.andExpect(status().isNotFound());
     }
 
     @Test
@@ -92,9 +98,11 @@ public class TesteEstadioController {
 
         when(estadioService.findEstadioById(estadioId)).thenReturn(estadioDTO);
 
-        //ACT & ASSERT
-        mockMvc.perform(get("/estadios/{id}", estadioId))
-                .andExpect(status().isOk())
+        //ACT
+        var resultado = mockMvc.perform(get("/estadios/{id}", estadioId));
+
+        //ASSERT
+        resultado.andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Maracanã"));
     }
 
@@ -104,9 +112,11 @@ public class TesteEstadioController {
         Long estadioId = 999L;
         when(estadioService.findEstadioById(estadioId)).thenReturn(null);
 
-        //ACT & ASSERT
-        mockMvc.perform(get("/estadios/{id}", estadioId))
-                .andExpect(status().isNotFound());
+        //ACT
+        var resultado = mockMvc.perform(get("/estadios/{id}", estadioId));
+
+        //ASSERT
+        resultado.andExpect(status().isNotFound());
     }
 
     @Test
@@ -115,9 +125,11 @@ public class TesteEstadioController {
         Long estadioId = 1L;
         when(estadioService.deleteEstadioEntity(estadioId)).thenReturn(true);
 
-        //ACT & ASSERT
-        mockMvc.perform(delete("/estadios/{id}", estadioId))
-                .andExpect(status().isNoContent());
+        //ACT
+        var resultado = mockMvc.perform(delete("/estadios/{id}", estadioId));
+
+        //ASSERT
+        resultado.andExpect(status().isNoContent());
     }
 
     @Test
@@ -126,9 +138,11 @@ public class TesteEstadioController {
         Long estadioId = 999L;
         when(estadioService.deleteEstadioEntity(estadioId)).thenReturn(false);
 
-        //ACT & ASSERT
-        mockMvc.perform(delete("/estadios/{id}", estadioId))
-                .andExpect(status().isNotFound());
+        //ACT
+        var resultado = mockMvc.perform(delete("/estadios/{id}", estadioId));
+
+        //ASSERT
+        resultado.andExpect(status().isNotFound());
     }
 
     @Test
@@ -144,9 +158,11 @@ public class TesteEstadioController {
 
         when(estadioService.findAllEstadios(any(Pageable.class))).thenReturn(estadiosPage);
 
-        //ACT & ASSERT
-        mockMvc.perform(get("/estadios"))
-                .andExpect(status().isOk())
+        //ACT
+        var resultado = mockMvc.perform(get("/estadios"));
+
+        //ASSERT
+        resultado.andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(2))
                 .andExpect(jsonPath("$.content[0].name").value("Maracanã"))

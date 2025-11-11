@@ -2,6 +2,7 @@ package com.example.testeapifutebol.Excecao;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -31,6 +32,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RegraDoNaoEncontradoExcecao404.class)
     public ResponseEntity<String> handleNaoEncontrado404(RegraDoNaoEncontradoExcecao404 ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    // Trata validações do Bean Validation (@Size, @NotBlank, etc.)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<String> handleValidationErrors(MethodArgumentNotValidException ex) {
+        // Pega apenas a primeira mensagem de erro
+        String mensagem = ex.getBindingResult()
+                .getFieldErrors()
+                .get(0)
+                .getDefaultMessage();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mensagem);
     }
 
 }

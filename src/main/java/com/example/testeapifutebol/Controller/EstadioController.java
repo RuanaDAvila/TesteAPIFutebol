@@ -68,6 +68,8 @@ public class EstadioController {
     //Lista todos os estádios com paginação
     @GetMapping
     public ResponseEntity<Page<EstadioDTO>> listarEstadios(
+            // PARÂMETROS DE FILTRO
+            @RequestParam(required = false) String nome,
             // PARÂMETROS DE PAGINAÇÃO E ORDENAÇÃO
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -81,8 +83,8 @@ public class EstadioController {
         //Cria configuração de paginação e ordenação
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
-        //Busca estádios aplicando paginação e ordenação
-        Page<EstadioDTO> estadiosEncontrados = estadioService.findAllEstadios(pageable);
+        //Busca estádios aplicando filtros, paginação e ordenação
+        Page<EstadioDTO> estadiosEncontrados = estadioService.findEstadiosComFiltros(nome, pageable);
         
         return new ResponseEntity<>(estadiosEncontrados, HttpStatus.OK); // 200
     }

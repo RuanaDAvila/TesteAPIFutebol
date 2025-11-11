@@ -30,6 +30,18 @@ public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
            "GROUP BY c.id, c.nome")
     List<Object[]> findEstatisticasClubes();
 
+    //Busca estatísticas de um clube específico
+    @Query("SELECT " +
+           "COUNT(p) as totalJogos, " +
+           "SUM(CASE WHEN (p.clubeCasaId = :clubeId AND p.resultadoCasa > p.resultadoVisitante) OR (p.clubeVisitanteId = :clubeId AND p.resultadoVisitante > p.resultadoCasa) THEN 1 ELSE 0 END) as vitorias, " +
+           "SUM(CASE WHEN p.resultadoCasa = p.resultadoVisitante AND (p.clubeCasaId = :clubeId OR p.clubeVisitanteId = :clubeId) THEN 1 ELSE 0 END) as empates, " +
+           "SUM(CASE WHEN (p.clubeCasaId = :clubeId AND p.resultadoCasa < p.resultadoVisitante) OR (p.clubeVisitanteId = :clubeId AND p.resultadoVisitante < p.resultadoCasa) THEN 1 ELSE 0 END) as derrotas, " +
+           "COALESCE(SUM(CASE WHEN p.clubeCasaId = :clubeId THEN p.resultadoCasa ELSE 0 END), 0) + COALESCE(SUM(CASE WHEN p.clubeVisitanteId = :clubeId THEN p.resultadoVisitante ELSE 0 END), 0) as golsFeitos, " +
+           "COALESCE(SUM(CASE WHEN p.clubeCasaId = :clubeId THEN p.resultadoVisitante ELSE 0 END), 0) + COALESCE(SUM(CASE WHEN p.clubeVisitanteId = :clubeId THEN p.resultadoCasa ELSE 0 END), 0) as golsSofridos " +
+           "FROM PartidaEntity p " +
+           "WHERE p.clubeCasaId = :clubeId OR p.clubeVisitanteId = :clubeId")
+    Object[] findEstatisticasClube(@Param("clubeId") Long clubeId);
+
     //Busca partidas de um clube específico (mandante ou visitante) dentro de um período
     @Query("SELECT p FROM PartidaEntity p " +
            "WHERE (p.clubeCasaId = :clubeId OR p.clubeVisitanteId = :clubeId) " +
@@ -84,8 +96,8 @@ public interface PartidaRepository extends JpaRepository<PartidaEntity, Long> {
            "(p.resultadoCasa - p.resultadoVisitante) >= 3 OR " +
            "(p.resultadoVisitante - p.resultadoCasa) >= 3) AND " +
            "(:clubeId IS NULL OR p.clubeCasaId = :clubeId OR p.clubeVisitanteId = :clubeId) AND " +
-           "(COALESCE(:apenasMandante, false) = false OR p.clubeCasaId = :clubeId) AND " +
-           "(COALESCE(:apenasVisitante, false) = false OR p.clubeVisitanteId = :clubeId)")
+           "(COALESCE(:clubeCasa, false) = false OR p.clubeCasaId = :clubeId) AND " +
+           "(COALESCE(:clubeVisitante, false) = false OR p.clubeVisitanteId = :clubeId)")
     Page<PartidaEntity> findPartidasComFiltros(
         @Param("estadio") String estadio,
         @Param("golsCasa") Integer golsCasa,

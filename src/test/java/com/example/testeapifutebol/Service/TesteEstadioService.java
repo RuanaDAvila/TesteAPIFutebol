@@ -36,7 +36,7 @@ public class TesteEstadioService {
 
     @Test
     void testeCadastrarEstadio_Sucesso() {
-        //ARRANGE
+        //ARRANGE, preparar dados
         EstadioDTO estadioDTO = new EstadioDTO();
         estadioDTO.setName("Maracanã");
 
@@ -44,13 +44,14 @@ public class TesteEstadioService {
         estadioSalvo.setId(1L);
         estadioSalvo.setNome("Maracanã");
 
+        //Configurar mock
         when(estadioRepository.existsByNome("Maracanã")).thenReturn(false);
         when(estadioRepository.save(any(EstadioEntity.class))).thenReturn(estadioSalvo);
 
-        //ACT
+        //ACT, executar o metodo
         EstadioDTO resultado = estadioService.cadastrarEstadio(estadioDTO);
 
-        //ASSERT
+        //ASSERT, verificar o resultado
         assertNotNull(resultado);
         assertEquals("Maracanã", resultado.getName());
     }
@@ -61,7 +62,7 @@ public class TesteEstadioService {
         EstadioDTO estadioDTO = new EstadioDTO();
         estadioDTO.setName("AB"); // Nome com menos de 3 letras
 
-        //ACT & ASSERT
+        //ACT
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             estadioService.cadastrarEstadio(estadioDTO);
         });
@@ -75,7 +76,7 @@ public class TesteEstadioService {
         EstadioDTO estadioDTO = new EstadioDTO();
         estadioDTO.setName(null); // Nome nulo
 
-        //ACT & ASSERT
+        //ACT
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             estadioService.cadastrarEstadio(estadioDTO);
         });
@@ -89,7 +90,7 @@ public class TesteEstadioService {
         EstadioDTO estadioDTO = new EstadioDTO();
         estadioDTO.setName("   "); // Nome vazio
 
-        //ACT & ASSERT
+        //ACT
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             estadioService.cadastrarEstadio(estadioDTO);
         });
@@ -103,7 +104,7 @@ public class TesteEstadioService {
         EstadioDTO estadioDTO = new EstadioDTO();
         estadioDTO.setName("Est@dio123"); // Nome com caracteres especiais
 
-        //ACT & ASSERT
+        //ACT
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             estadioService.cadastrarEstadio(estadioDTO);
         });
@@ -119,7 +120,7 @@ public class TesteEstadioService {
 
         when(estadioRepository.existsByNome("Maracanã")).thenReturn(true);
 
-        //ACT & ASSERT
+        //ACT
         RegraDeExcecao409 excecao = assertThrows(RegraDeExcecao409.class, () -> {
             estadioService.cadastrarEstadio(estadioDTO);
         });
@@ -180,7 +181,7 @@ public class TesteEstadioService {
         when(estadioRepository.findById(estadioId)).thenReturn(Optional.of(estadioExistente));
         when(estadioRepository.existsByNome("Arena Corinthians")).thenReturn(true);
 
-        //ACT & ASSERT
+        //ACT
         RegraDeExcecao409 excecao = assertThrows(RegraDeExcecao409.class, () -> {
             estadioService.updateEstadioEntity(estadioId, estadioDTO);
         });

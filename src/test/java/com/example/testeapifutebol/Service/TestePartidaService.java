@@ -125,7 +125,7 @@ public class TestePartidaService {
 
         when(clubeRepository.existsById(999L)).thenReturn(false);
 
-        //ACT & ASSERT
+        //ACT
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             partidaService.savePartidaEntity(partidaDTO);
         });
@@ -148,7 +148,7 @@ public class TestePartidaService {
         when(clubeRepository.existsById(2L)).thenReturn(true);
         when(estadioRepository.existsByNome("Estádio Inexistente")).thenReturn(false);
 
-        //ACT & ASSERT
+        //ACT
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             partidaService.savePartidaEntity(partidaDTO);
         });
@@ -171,7 +171,7 @@ public class TestePartidaService {
         when(clubeRepository.existsById(2L)).thenReturn(true);
         when(estadioRepository.existsByNome("Maracanã")).thenReturn(true);
 
-        //ACT & ASSERT
+        //ACT
         RegraDeInvalidosExcecao400 excecao = assertThrows(RegraDeInvalidosExcecao400.class, () -> {
             partidaService.savePartidaEntity(partidaDTO);
         });
@@ -208,7 +208,7 @@ public class TestePartidaService {
         when(clubeRepository.existsById(2L)).thenReturn(true);
         when(estadioRepository.existsByNome("Maracanã")).thenReturn(true);
 
-        //ACT & ASSERT
+        //ACT
         RegraDeExcecao409 excecao = assertThrows(RegraDeExcecao409.class, () -> {
             partidaService.savePartidaEntity(partidaDTO);
         });
@@ -247,7 +247,7 @@ public class TestePartidaService {
         Long partidaId = 999L;
         when(partidaRepository.findById(partidaId)).thenReturn(Optional.empty());
 
-        //ACT & ASSERT
+        //ACT
         RegraDoNaoEncontradoExcecao404 excecao = assertThrows(RegraDoNaoEncontradoExcecao404.class, () -> {
             partidaService.findPartidaById(partidaId);
         });
@@ -310,7 +310,7 @@ public class TestePartidaService {
         PartidaDTO partidaDTO = new PartidaDTO();
         when(partidaRepository.findById(partidaId)).thenReturn(Optional.empty());
 
-        //ACT & ASSERT
+        //ACT
         RegraDoNaoEncontradoExcecao404 excecao = assertThrows(RegraDoNaoEncontradoExcecao404.class, () -> {
             partidaService.updatePartidaEntity(partidaId, partidaDTO);
         });
@@ -339,7 +339,7 @@ public class TestePartidaService {
         Long partidaId = 999L;
         when(partidaRepository.existsById(partidaId)).thenReturn(false);
 
-        //ACT & ASSERT
+        //ACT
         RegraDoNaoEncontradoExcecao404 excecao = assertThrows(RegraDoNaoEncontradoExcecao404.class, () -> {
             partidaService.deletePartidaEntity(partidaId);
         });

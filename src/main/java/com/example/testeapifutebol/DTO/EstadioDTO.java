@@ -11,7 +11,7 @@ public class EstadioDTO {
     
     //Validações de no minimo 3 letras e sem caracteres especiais no Estado
     @NotBlank(message = "O nome do estádio é obrigatório")
-    @Size(min = 3, message = "O nome do estádio deve ter no mínimo 3 caracteres")
+    @Size(min = 3, message = "O nome do estádio deve ter ao menos 3 letras")
     @Pattern(regexp = "^[a-zA-ZÀ-ÿ\\s]*$", message = "O nome do estádio deve conter apenas letras e espaços")
     private String nome;
 

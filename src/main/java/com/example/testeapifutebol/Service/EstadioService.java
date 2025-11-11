@@ -117,6 +117,22 @@ public class EstadioService {
         return estadios.map(this::converterEntityParaDTO);
     }
 
+    // Lista estádios com filtros, paginação e ordenação
+    public Page<EstadioDTO> findEstadiosComFiltros(String nome, Pageable pageable) {
+        Page<EstadioEntity> estadios;
+        
+        if (nome != null && !nome.trim().isEmpty()) {
+            // Busca por nome (busca parcial, case-insensitive)
+            estadios = estadioRepository.findByNomeContainingIgnoreCase(nome.trim(), pageable);
+        } else {
+            // Se não há filtro, busca todos
+            estadios = estadioRepository.findAll(pageable);
+        }
+        
+        // Converte cada Entity para DTO
+        return estadios.map(this::converterEntityParaDTO);
+    }
+
     //metodo auxiliar para converter EstadioEntity -> EstadioDTO
     private EstadioDTO converterEntityParaDTO(EstadioEntity estadioEntity) {
         EstadioDTO estadioDTO = new EstadioDTO();

@@ -7,7 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +31,7 @@ public class TesteClubeController {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ClubeService clubeService;
 
     @Autowired
@@ -46,11 +48,13 @@ public class TesteClubeController {
 
         when(clubeService.saveClubeEntity(any(ClubeDTO.class))).thenReturn(clubeDTO);
 
-        //ACT & ASSERT
-        mockMvc.perform(post("/clubes")
+        //ACT
+        var resultado = mockMvc.perform(post("/clubes")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(clubeDTO)))
-                .andExpect(status().isCreated())
+                .content(objectMapper.writeValueAsString(clubeDTO)));
+
+        //ASSERT
+        resultado.andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nome").value("Flamengo"))
                 .andExpect(jsonPath("$.estado").value("RJ"));
     }
@@ -67,11 +71,13 @@ public class TesteClubeController {
 
         when(clubeService.updateClubeEntity(eq(clubeId), any(ClubeDTO.class))).thenReturn(clubeDTO);
 
-        //ACT & ASSERT
-        mockMvc.perform(put("/clubes/{id}", clubeId)
+        //ACT
+        var resultado = mockMvc.perform(put("/clubes/{id}", clubeId)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(clubeDTO)))
-                .andExpect(status().isOk())
+                .content(objectMapper.writeValueAsString(clubeDTO)));
+
+        //ASSERT
+        resultado.andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Flamengo Atualizado"));
     }
 
@@ -86,9 +92,11 @@ public class TesteClubeController {
 
         when(clubeService.findClubeById(clubeId)).thenReturn(clubeDTO);
 
-        //ACT & ASSERT
-        mockMvc.perform(get("/clubes/{id}", clubeId))
-                .andExpect(status().isOk())
+        //ACT
+        var resultado = mockMvc.perform(get("/clubes/{id}", clubeId));
+
+        //ASSERT
+        resultado.andExpect(status().isOk())
                 .andExpect(jsonPath("$.nome").value("Flamengo"))
                 .andExpect(jsonPath("$.estado").value("RJ"));
     }
@@ -99,9 +107,11 @@ public class TesteClubeController {
         Long clubeId = 1L;
         when(clubeService.inativarClubeEntity(clubeId)).thenReturn(true);
 
-        //ACT & ASSERT
-        mockMvc.perform(delete("/clubes/{id}", clubeId))
-                .andExpect(status().isNoContent());
+        //ACT
+        var resultado = mockMvc.perform(delete("/clubes/{id}", clubeId));
+
+        //ASSERT
+        resultado.andExpect(status().isNoContent());
     }
 
     @Test
@@ -119,9 +129,11 @@ public class TesteClubeController {
 
         when(clubeService.findAllClubeEntity()).thenReturn(clubes);
 
-        //ACT & ASSERT
-        mockMvc.perform(get("/clubes"))
-                .andExpect(status().isOk())
+        //ACT
+        var resultado = mockMvc.perform(get("/clubes"));
+
+        //ASSERT
+        resultado.andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].nome").value("Flamengo"))
@@ -140,11 +152,13 @@ public class TesteClubeController {
 
         when(clubeService.findClubesComFiltros(any(), any(), any(), any(), any(Pageable.class))).thenReturn(clubesPage);
 
-        //ACT & ASSERT
-        mockMvc.perform(get("/clubes/buscar")
+        //ACT
+        var resultado = mockMvc.perform(get("/clubes/buscar")
                 .param("nome", "Flamengo")
-                .param("estado", "RJ"))
-                .andExpect(status().isOk())
+                .param("estado", "RJ"));
+
+        //ASSERT
+        resultado.andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].nome").value("Flamengo"));
